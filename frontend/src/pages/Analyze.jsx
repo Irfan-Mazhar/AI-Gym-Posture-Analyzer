@@ -7,6 +7,7 @@ function Analyze() {
   const [accuracy, setAccuracy] = useState(0);
   const [exercise, setExercise] = useState(null);
   const [videoSrc, setVideoSrc] = useState("");
+  const [detectedExercise, setDetectedExercise] = useState('Detecting...');
 
   useEffect(() => {
     let eventSource;
@@ -22,6 +23,7 @@ function Analyze() {
         setReps(data.reps);
         setForm(data.form);
         setAccuracy(data.accuracy);
+        setDetectedExercise(data.exercise || 'Detecting...');
       };
 
       // Handle any errors
@@ -40,13 +42,14 @@ function Analyze() {
     };
   }, [liveVideo]); // This effect depends on the liveVideo state
 
-  async function startWorkout(exerciseName) {
-    await fetch(`http://localhost:5000/start_exercise/${exerciseName}`, {
-      method: "POST",
-    });
+  async function startAnalysis() {
     setVideoSrc(`http://localhost:5000/video?t=${new Date().getTime()}`);
-    setExercise(exerciseName);
+    // setExercise(exerciseName);
     setLiveVideo(true);
+    setReps(0);
+    setForm('N/A');
+    setAccuracy(0);
+    setDetectedExercise('Detecting...');
   }
   
   async function stopWorkout() {
@@ -54,7 +57,7 @@ function Analyze() {
     setReps(0);
     setForm("N/A");
     setAccuracy(0);
-    setExercise(null);
+    // setExercise(null);
     await fetch("http://localhost:5000/stop", {
       method: "POST",
     });
@@ -69,11 +72,16 @@ function Analyze() {
       <span>
         {!liveVideo ? (
           <div className="flex flex-col md:block font-heading">
-            <h3 className="text-white text-bold font-sans">
+            {/* <h3 className="text-white text-bold font-sans">
               CHOOSE YOUR EXERCISE
-            </h3>
-            <button
-              className="border-2  font-bold   bg-red-500 m-4 hover:shadow-lg shadow-gray-500/80 rounded-lg p-3 hover:cursor-pointer hover:scale-[1.05]"
+            </h3> */}
+
+            <button 
+              className="border-2 font-bold bg-red-500 m-4 hover:shadow-lg shadow-gray-500/80 rounded-lg p-3 hover:cursor-pointer hover:scale-[1.05]"
+              onClick={startAnalysis}
+            >Start Analysis</button>
+            {/* <button
+              className="border-2 font-bold bg-red-500 m-4 hover:shadow-lg shadow-gray-500/80 rounded-lg p-3 hover:cursor-pointer hover:scale-[1.05]"
               onClick={() => startWorkout("pushups")}
             >
               Push Ups
@@ -95,7 +103,7 @@ function Analyze() {
               onClick={() => startWorkout("shoulderpress")}
             >
               Shoulder Press
-            </button>
+            </button> */}
           </div>
         ) : (
           <button
@@ -120,6 +128,7 @@ function Analyze() {
         )}
         {liveVideo && (
           <div className="m-3  p-4 bg-gray-800 rounded-lg shadow-lg text-left text-2xl w-80 text-white font-heading">
+            <h2 className="text-3xl font-bold mb-3 text-orange-500 text-center">{detectedExercise.replace('_',' ').toUpperCase()} Stats</h2>
             <h2 className="text-3xl font-bold mb-3 text-orange-500 text-center">
               WORKOUT STATS
             </h2>

@@ -9,41 +9,37 @@ function Hero() {
 
   // 👇 Particle options with dumbbell image shape
   const particleOptions = {
-    fullScreen: { enable: false },
-    particles: {
-      number: {
-        value: 15,
-        density: { enable: true, area: 800 },
-      },
-      color: "#cfb498" ,
-      shape: {
-        type: "image",
-        
-        image: [
-          {
-            src: "/dumbbell.svg", // 👉 put a dumbbell SVG/PNG in your public/ folder
-            width: 26,
-            height: 26,
-          },
-          
-        ],
-      },
-      
-      opacity: { value: 0.8 },
-      size: {
-        value: 8,
-        random: { enable: true, minimumValue: 23 },
-      },
-      move: {
-        enable: true,
-        speed: 2,
-        direction: "none",
-        outModes: { default: "bounce" },
-      },
+  fullScreen: { enable: false },
+  particles: {
+    number: {
+      value: 15,
+      density: { enable: true, area: 800 },
     },
-    
-    detectRetina: true,
-  };
+    color: "#cfb498",
+    shape: {
+      type: "image",
+      image: [
+        {
+          src: "/dumbbell.svg", // 👉 your dumbbell image
+          width: 26,
+          height: 26,
+        },
+      ],
+    },
+    opacity: { value: 0.8 },
+    size: {
+      value: 8,
+      random: { enable: true, minimumValue: 23 },
+    },
+    move: {
+      enable: true,
+      speed: 2,
+      direction: "none",
+      outModes: { default: "bounce" },
+    },
+  },
+  detectRetina: true,
+};
 
   return (
     <div className="h-full md:flex md:flex-col md:items-center">

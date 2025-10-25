@@ -1,4 +1,5 @@
 import { Dumbbell } from 'lucide-react';
+import { Link } from 'react-router-dom';
 function Navbar() {
     return (
         <nav className="w-full bg-[#cfb498] md:h-20 flex md:sticky md:top-0 z-99 justify-between items-center  md:flex-row">
@@ -16,15 +17,15 @@ function Navbar() {
                         <li className='hover:cursor-pointer hover:text-gray-300'>
                             About
                         </li>
-                        <div className="flex visibility: hidden md:visible items-right gap-2 justify-end">
+                        {/* <div className=" hover:cursor-pointer hover:text-gray-300"> */}
 
-                        <li>
-                            Sign Up
+                        <li className='hover:cursor-pointer hover:text-gray-300'>
+                            <Link to="/Login">Sign Up</Link>
                         </li>
-                        <li>
-                            Log in
+                        <li className='hover:cursor-pointer hover:text-gray-300'>
+                            <Link to="/Login">Login</Link>
                         </li>
-                        </div>
+                        {/* </div> */}
                     </ul>
                 </div>
             </nav>
