@@ -1,167 +1,371 @@
-import React, { useEffect, useState } from "react";
-import Navbar from "../components/ui/Navbar"
+import React, { useEffect, useState, useRef } from "react";
+import Navbar from "../components/ui/Navbar";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
 function Analyze() {
   const [liveVideo, setLiveVideo] = useState(false);
   const [reps, setReps] = useState(0);
   const [form, setForm] = useState("N/A");
   const [accuracy, setAccuracy] = useState(0);
-  const [exercise, setExercise] = useState(null);
   const [videoSrc, setVideoSrc] = useState("");
   const [detectedExercise, setDetectedExercise] = useState('Detecting...');
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [sessionExercises, setSessionExercises] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [saveSessionModal, setSaveSessionModal] = useState(false);
+  const [sessionName, setSessionName ] = useState("");
+  const [sessionToSave, setSessionToSave] = useState(null);
+  const { token } = useAuth();
+  const navigate = useNavigate();
+  const lastSpokenMessage = useRef(null);
+  const currentExerciseData = useRef({ name: null, startTime: null, reps: 0, accuracySum: 0, frameCount: 0 });
 
+  // --- No changes to your useEffect logic ---
+  useEffect(() => {
+    if(token){
+      setIsLoggedIn(true)
+    }
+  },[])
   useEffect(() => {
     let eventSource;
     if (liveVideo) {
-      // Create a new EventSource connection to our /data route
+      if (!sessionStartTime) {
+        setSessionStartTime(new Date());
+      }
       eventSource = new EventSource("http://localhost:5000/data");
-      console.log("Event source working");
-
-      // Listen for messages from the server
       eventSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        // Update state with the new data
-        setReps(data.reps);
+        const newlyDetectedExercise = data.exercise || null;
+
+        if (newlyDetectedExercise && newlyDetectedExercise !== 'Detecting...' && newlyDetectedExercise !== currentExerciseData.current.name) {
+          if (currentExerciseData.current.name && currentExerciseData.current.frameCount > 0 && currentExerciseData.current.reps > 0) {
+            const exerciseEndTime = new Date();
+            const durationSeconds = Math.round((exerciseEndTime - currentExerciseData.current.startTime) / 1000);
+            const avgAccuracy = Math.round(currentExerciseData.current.accuracySum / currentExerciseData.current.frameCount);
+            setSessionExercises(prev => [
+              ...prev,
+              {
+                exercise_name: currentExerciseData.current.name,
+                reps: currentExerciseData.current.reps,
+                avg_accuracy: avgAccuracy,
+                duration_seconds: durationSeconds
+              }
+            ]);
+          }
+          console.log("Switching to:", newlyDetectedExercise);
+          currentExerciseData.current = {
+            name: newlyDetectedExercise,
+            startTime: new Date(),
+            reps: 0,
+            accuracySum: 0,
+            frameCount: 0
+          };
+        }
+
+        if (newlyDetectedExercise && newlyDetectedExercise !== 'Detecting...' && newlyDetectedExercise === currentExerciseData.current.name) {
+          currentExerciseData.current.reps = data.reps;
+          currentExerciseData.current.accuracySum += data.accuracy;
+          currentExerciseData.current.frameCount += 1;
+        }
+
+        setDetectedExercise(newlyDetectedExercise || 'Detecting...');
+        setReps(currentExerciseData.current.name === newlyDetectedExercise ? data.reps : 0);
         setForm(data.form);
         setAccuracy(data.accuracy);
-        setDetectedExercise(data.exercise || 'Detecting...');
       };
-
-      // Handle any errors
       eventSource.onerror = (err) => {
         console.error("EventSource failed:", err);
-        eventSource.close();
+        if (eventSource) eventSource.close();
       };
+    } else {
+      setSessionStartTime(null);
+      setSessionExercises([]);
+      currentExerciseData.current = { name: null, startTime: null, reps: 0, accuracySum: 0, frameCount: 0 };
     }
-
-    // This cleanup function will be called when the component unmounts
-    // or when liveVideo becomes false
     return () => {
       if (eventSource) {
         eventSource.close();
+        console.log("EventSource closed");
       }
     };
-  }, [liveVideo]); // This effect depends on the liveVideo state
+  }, [liveVideo, token, sessionStartTime]);
 
+  useEffect(() => {
+        // List of "bad form" messages. Add any others you have.
+        const badFormMessages = ["Go Deeper", "Keep Chest Up", "Keep Back Straight", "Error", "Bad Form"];
+        
+        // Check if the current form is a "bad" one
+        const isBadForm = badFormMessages.includes(form);
+
+        // Only speak if it's a new bad form message
+        if (isBadForm && form !== lastSpokenMessage.current) {
+            // Cancel any previous, unfinished speech
+            window.speechSynthesis.cancel();
+            
+            // Create a new speech object
+            const utterance = new SpeechSynthesisUtterance(form);
+            
+            // (Optional) Configure voice, pitch, rate
+            utterance.lang = 'en-US';
+            utterance.rate = 1.0; 
+            
+            // Speak the message
+            window.speechSynthesis.speak(utterance);
+            
+            // Remember this message so we don't repeat it
+            lastSpokenMessage.current = form; 
+        }
+
+        // If form goes back to good, reset the memory
+        // This allows the app to correct the user again on the next rep
+        if (form === "Good Form" || form === "Good Depth") {
+            lastSpokenMessage.current = null;
+        }
+
+    }, [form]);
+
+  // --- No changes to your async functions logic ---
   async function startAnalysis() {
-    setVideoSrc(`http://localhost:5000/video?t=${new Date().getTime()}`);
-    // setExercise(exerciseName);
+    setSessionStartTime(null);
+    setSessionExercises([]);
+    currentExerciseData.current = { name: null, startTime: null, reps: 0, accuracySum: 0, frameCount: 0 };
     setLiveVideo(true);
     setReps(0);
     setForm('N/A');
     setAccuracy(0);
     setDetectedExercise('Detecting...');
+    setVideoSrc(`http://localhost:5000/video?t=${new Date().getTime()}`);
   }
-  
+
   async function stopWorkout() {
+    const sessionEndTime = new Date();
+    await fetch("http://localhost:5000/stop", { method: "POST" });
     setLiveVideo(false);
-    setReps(0);
-    setForm("N/A");
-    setAccuracy(0);
-    // setExercise(null);
-    await fetch("http://localhost:5000/stop", {
-      method: "POST",
-    });
+    // await setSaveSessionModal(true);
+    // console.log("save session modal", saveSessionModal)
+
+    let finalSessionExercises = [...sessionExercises];
+    if (currentExerciseData.current.name && currentExerciseData.current.frameCount > 0 && currentExerciseData.current.reps>0) {
+      const durationSeconds = Math.round((sessionEndTime - currentExerciseData.current.startTime) / 1000);
+      const avgAccuracy = Math.round(currentExerciseData.current.accuracySum / currentExerciseData.current.frameCount);
+      finalSessionExercises.push({
+        exercise_name: currentExerciseData.current.name,
+        reps: currentExerciseData.current.reps,
+        avg_accuracy: avgAccuracy,
+        duration_seconds: durationSeconds
+      });
+    }
+
+    const sessionSummary = {
+      startTime: sessionStartTime?.toISOString(),
+      endTime: sessionEndTime.toISOString(),
+      exercises: finalSessionExercises
+    };
+
+    console.log("Session Summary to send:", sessionSummary);
+
+    if (sessionSummary.exercises.length > 0) {
+      setSessionToSave(sessionSummary); // Store the data
+      setSaveSessionModal(true); // Show the modal
+    } else {
+      // If no exercises, just reset
+      resetSessionState();
+    }
   }
 
-  return (
-    <div className="bg-white h-screen w-full">
-      <Navbar />
-      <h1 className="text-blue-500 text-3xl font-heading font-bold mt-10">
-        AI Gym Posture Analyzer
-      </h1>
-      <span>
-        {!liveVideo ? (
-          <div className="flex flex-col md:block font-heading">
-            {/* <h3 className="text-white text-bold font-sans">
-              CHOOSE YOUR EXERCISE
-            </h3> */}
+  async function handleSaveSession() {
+    if (!token || !sessionToSave) {
+      alert("Error: No session data to save or not logged in.");
+      return;
+    }
 
-            <button 
-              className="border-2 font-bold bg-red-500 m-4 hover:shadow-lg shadow-gray-500/80 rounded-lg p-3 hover:cursor-pointer hover:scale-[1.05]"
-              onClick={startAnalysis}
-            >Start Analysis</button>
-            {/* <button
-              className="border-2 font-bold bg-red-500 m-4 hover:shadow-lg shadow-gray-500/80 rounded-lg p-3 hover:cursor-pointer hover:scale-[1.05]"
-              onClick={() => startWorkout("pushups")}
-            >
-              Push Ups
-            </button>
-            <button
-              className="border-2  font-bold   bg-red-500 m-4 hover:shadow-lg shadow-gray-500/80 rounded-lg p-3 hover:cursor-pointer hover:scale-[1.05]"
-              onClick={() => startWorkout("squats")}
-            >
-              Squats
-            </button>
-            <button
-              className="border-2  hover:scale-[1.05] font-bold bg-red-500 m-4 hover:shadow-lg shadow-gray-500/80 rounded-lg p-3 hover:cursor-pointer"
-              onClick={() => startWorkout("curls")}
-            >
-              Bicep Curls
-            </button>
-            <button
-              className="border-2  font-bold   bg-red-500 m-4 hover:shadow-lg shadow-gray-500/80 rounded-lg p-3 hover:cursor-pointer hover:scale-[1.05]"
-              onClick={() => startWorkout("shoulderpress")}
-            >
-              Shoulder Press
-            </button> */}
-          </div>
-        ) : (
-          <button
-            className="border-2 font-bold hover:shadow-lg shadow-gray-500/80 bg-red-500 rounded-lg p-3 hover:cursor-pointer"
-            onClick={stopWorkout}
-          >
-            Stop Workout
-          </button>
-        )}
-      </span>
-      <div className="flex flex-col lg:flex-row items-center lg:items-stretch justify-center">
-        {liveVideo === true ? (
-          <div className="m-4 mb-2 ">
-            <img
-              src={videoSrc}
-              alt="AI Gym Trainer"
-              className="rounded-lg shadow-lg border-4 border-orange-500  "
-            />
-          </div>
-        ) : (
-          <div></div>
-        )}
-        {liveVideo && (
-          <div className="m-3  p-4 bg-gray-800 rounded-lg shadow-lg text-left text-2xl w-80 text-white font-heading">
-            <h2 className="text-3xl font-bold mb-3 text-orange-500 text-center">{detectedExercise.replace('_',' ').toUpperCase()} Stats</h2>
-            <h2 className="text-3xl font-bold mb-3 text-orange-500 text-center">
-              WORKOUT STATS
-            </h2>
-            <div className="mb-2">
-              <p className="font-semibold font-sans">REPS:</p>
-              <p className="text-3xl font-bold text-green-400">{reps}</p>
-            </div>
-            <div className="mb-2">
-              <p className="font-semibold font-sans">FORM:</p>
-              <p
-                className={`text-3xl font-bold ${
-                  form === "Good Form" || form === "Good Depth"
-                    ? "text-green-400"
-                    : "text-red-500"
-                }`}
-              >
-                {form}
-              </p>
-            </div>
+    // Add the user-defined name to the session object
+    const finalSessionData = {
+      ...sessionToSave,
+      sessionName: sessionName || `Workout - ${new Date().toLocaleDateString()}` // Add a default name
+    };
+
+    try {
+      console.log("Saving session:", finalSessionData);
+      const response = await fetch('http://localhost:5000/save_session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(finalSessionData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert("Workout session saved successfully!");
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to save workout: ${errorData.message}`);
+      }
+    } catch (err) {
+      alert("An error occurred while saving the workout.");
+    } finally {
+      // Close modal and reset everything
+      handleDiscardSession();
+    }
+  }
+
+  function handleDiscardSession() {
+    setSaveSessionModal(false);
+    resetSessionState();
+  }
+
+  // --- NEW: Helper to reset all session state ---
+  function resetSessionState() {
+    setDetectedExercise(null);
+    setVideoSrc("");
+    setSessionStartTime(null);
+    setSessionExercises([]);
+    currentExerciseData.current = { name: null, startTime: null, reps: 0, accuracySum: 0, frameCount: 0 };
+    setSessionToSave(null);
+    setSessionName("");
+  }
+
+  // --- START OF UI / CSS CHANGES ---
+  return (
+    // Use a softer background color and default to a modern sans-serif font
+    <div className="bg-gray-50 min-h-screen w-full font-sans text-gray-900">
+      <Navbar />
+      {saveSessionModal && (
+        // Modal Overlay: dark background, fills screen
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm  ">
+          {/* Modal Content */}
+          <div className="bg-[#cfb498] shadow-sm shadow-gray-300 p-6 rounded-lg shadow-xl text-white w-full max-w-md">
+            <h2 className="text-2xl font-bold mb-4">Save Your Session?</h2>
+            {/* <p className="mb-4 text-gray-100">Name your workout session to save it to your history.</p> */}
             <div>
-              <p className="font-semibold font-sans">ACCURACY:</p>
-              <p
-                className={`text-3xl font-bold ${
-                  accuracy > 85 ? "text-green-400" : "text-yellow-500"
-                }`}
+              <input
+                type="text"
+                placeholder={`Leg Day, Back and Biceps ...`}
+                value={sessionName}
+                onChange={(e) => setSessionName(e.target.value)}
+                className="w-full px-3 py-2 mt-1 text-gray-900 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+              />
+            </div>
+            <div className="mt-6 flex justify-center gap-4">
+              {/* FIX: Use arrow functions for onClick */}
+              <button
+                onClick={handleDiscardSession}
+                className="px-4 py-2 font-semibold text-gray-700 hover:cursor-pointer bg-gray-200 rounded-md hover:bg-gray-300"
               >
-                {accuracy}%
-              </p>
+                Discard Session
+              </button>
+              <button
+                onClick={handleSaveSession}
+                className="px-4 py-2 font-semibold text-black hover:cursor-pointer bg-yellow-200 rounded-md hover:bg-yellow-300"
+              >
+                Save Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main content wrapper with padding and max-width for a sleek, centered layout */}
+      <main className="w-full max-w-7xl mx-auto px-4 py-8">
+        {!liveVideo ? (
+          // "Lobby" view before starting workout
+          <div className="flex flex-col items-center justify-center gap-6 text-center h-[70vh]">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-800">
+              AI Gym Posture Analyzer
+            </h1>
+            <p className="text-lg text-gray-600 max-w-lg">
+              Get instant, AI-powered feedback on your exercise form. Click start to begin your analysis.
+            </p>
+            <button
+              className="font-bold bg-red-500 text-white m-4 hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl rounded-lg py-3 px-8 text-lg hover:scale-[1.03]"
+              onClick={startAnalysis}
+            >
+              Start Analysis
+            </button>
+            {!isLoggedIn && <button
+              className="font-bold bg-[#cfb498] text-white m-4 transition-all duration-200 shadow-lg hover:shadow-xl rounded-lg py-3 px-8 text-lg hover:scale-[1.03]"
+              onClick={() => navigate("/login/register")}
+            >
+              Sign Up to save your Progress!
+            </button>}
+          </div>
+        ) : (
+          // "Active Workout" view
+          <div className="w-full flex flex-col items-center gap-6">
+            <button
+              className="border-2 font-bold hover:shadow-lg bg-red-500 text-white rounded-lg py-3 px-8 text-lg hover:bg-red-600 transition-all duration-200"
+              onClick={stopWorkout} 
+            >
+              Stop Workout
+            </button>
+
+            {/* Main analysis area */}
+            <div className="flex flex-col lg:flex-row items-start justify-center gap-8 w-full">
+              
+              {/* Video Feed: Made larger and added shadow */}
+              <div className="w-full lg:flex-1">
+                <img
+                  src={videoSrc}
+                  alt="AI Gym Trainer"
+                  className="rounded-xl shadow-2xl border-4 border-orange-500 w-full"
+                />
+              </div>
+
+              {/* Stats Panel: Restyled for a modern "dashboard card" look */}
+              <div className="w-full lg:w-96 bg-gray-800 rounded-xl shadow-2xl p-6 text-white space-y-6">
+                <h2 className="text-2xl font-bold mb-4 text-orange-500 text-center uppercase tracking-wider">
+                  Workout Stats
+                </h2>
+                
+                {/* Detected Exercise */}
+                <div className="text-center bg-gray-700 p-3 rounded-lg">
+                  <p className="text-sm font-medium text-gray-400 uppercase">Exercise</p>
+                  <p className="text-3xl font-bold capitalize">
+                    {detectedExercise.replace('_', ' ')}
+                  </p>
+                </div>
+
+                {/* Reps */}
+                <div className="flex justify-between items-baseline p-3 bg-gray-700 rounded-lg">
+                  <p className="text-lg font-medium text-gray-400">REPS</p>
+                  <p className="text-4xl font-bold text-green-400 font-mono">{reps}</p>
+                </div>
+
+                {/* Form */}
+                <div className="flex justify-between items-baseline p-3 bg-gray-700 rounded-lg">
+                  <p className="text-lg font-medium text-gray-400">FORM</p>
+                  <p
+                    className={`text-3xl font-bold ${
+                      form === "Good Form" || form === "Good Depth"
+                        ? "text-green-400"
+                        : "text-red-500"
+                    }`}
+                  >
+                    {form}
+                  </p>
+                </div>
+
+                {/* Accuracy */}
+                <div className="flex justify-between items-baseline p-3 bg-gray-700 rounded-lg">
+                  <p className="text-lg font-medium text-gray-400">ACCURACY</p>
+                  <p
+                    className={`text-4xl font-bold font-mono ${
+                      accuracy > 85 ? "text-green-400" : "text-yellow-500"
+                    }`}
+                  >
+                    {accuracy}%
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
+
 export default Analyze;

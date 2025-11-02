@@ -13,6 +13,7 @@ import os
 from dotenv import load_dotenv
 import pandas as pd
 import numpy as np
+from datetime import datetime, timezone
 
 # Load environment variables from .env file
 load_dotenv()
@@ -100,10 +101,84 @@ def login():
 def get_profile(current_user):
     # This is an example of a protected route
     # print('user_data:',current_user)
+    if 'created_at' in current_user and isinstance(current_user['created_at'], datetime):
+        current_user['created_at'] = current_user['created_at'].isoformat()
+
+    # Convert the nested 'start_time' and 'end_time' fields in the sessions array
+    if 'sessions' in current_user and isinstance(current_user['sessions'], list):
+        for session in current_user['sessions']:
+            if 'start_time' in session and isinstance(session['start_time'], datetime):
+                session['start_time'] = session['start_time'].isoformat()
+            if 'end_time' in session and isinstance(session['end_time'], datetime):
+                session['end_time'] = session['end_time'].isoformat()
     return jsonify({
         'message': f'Welcome {current_user["username"]}!',
         'user_data': current_user
     })
+
+@app.route('/save_session', methods=['POST'])
+@token_required
+def save_session(current_user):
+    data = request.get_json()
+    
+    start_time_str = data.get('startTime')
+    end_time_str = data.get('endTime')
+    exercises_performed = data.get('exercises') # Expecting an array of objects
+    session_name = data.get('sessionName')
+
+
+    # --- Validation ---
+    if not start_time_str or not end_time_str or not isinstance(exercises_performed, list) or not exercises_performed:
+        return jsonify({'message': 'Missing or invalid session data (startTime, endTime, exercises array)'}), 400
+
+    # Validate exercises array structure (basic check)
+    for ex in exercises_performed:
+        if not all(k in ex for k in ('exercise_name', 'reps', 'avg_accuracy', 'duration_seconds')):
+            return jsonify({'message': 'Invalid structure in exercises array'}), 400
+        total_session_reps = sum(ex.get('reps', 0) for ex in exercises_performed)
+    
+        if total_session_reps == 0:
+            return jsonify({'message': 'No reps were performed, session not saved.'}), 400
+
+    # --- Convert Timestamps ---
+    try:
+        # Parse ISO strings sent from frontend (handle potential timezone issues)
+        start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00")).replace(tzinfo=timezone.utc)
+        end_time = datetime.fromisoformat(end_time_str.replace("Z", "+00:00")).replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError) as e:
+        print(f"Timestamp parsing error: {e}")
+        return jsonify({'message': 'Invalid startTime or endTime format (ISO 8601 expected)'}), 400
+
+    # --- Create the Session Document ---
+    session_document = {
+        "start_time": start_time,
+        "end_time": end_time,
+        "exercises_performed": exercises_performed,
+        "session_name": session_name,
+    }
+
+    # --- Update MongoDB ---
+    try:
+        # Push the entire session object into the 'sessions' array for the user
+        result = mongo.db.users.update_one(
+            {'username': current_user['username']},
+            { '$push': {'sessions': session_document} }
+        )
+
+        if result.matched_count == 1:
+            # Check if the document was actually modified (it should be if matched_count is 1)
+             if result.modified_count == 1 or result.upserted_id is not None:
+                return jsonify({'message': 'Workout session saved successfully'}), 200
+             else:
+                 # This might happen if $push fails for some reason, though unlikely
+                 print(f"Session save failed for user {current_user['username']} despite match.")
+                 return jsonify({'message': 'Failed to modify user document'}), 500
+        else:
+            return jsonify({'message': 'User not found'}), 404
+            
+    except Exception as e:
+        print(f"Error saving session for user {current_user['username']}: {e}")
+        return jsonify({'message': 'Error saving workout session'}), 500
 
 # --- Exercise Analysis Routes ---
 
@@ -137,7 +212,7 @@ def video_generator():
 
     last_predicted_exercise = None
     prediction_streak = 0
-    STABILITY_THRESHOLD = 30 # You can adjust this
+    STABILITY_THRESHOLD = 20 # You can adjust this
 
     with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
         while cap and cap.isOpened():
@@ -172,10 +247,10 @@ def video_generator():
                         detected_exercise_str = label_encoder.inverse_transform([prediction_encoded])[0]
 
                         # --- DEBUG PRINTS (Now working correctly) ---
-                        print("-" * 20)
-                        print(f"Raw Prediction: {detected_exercise_str} (Index: {prediction_encoded})")
-                        all_probs = {label_encoder.inverse_transform([i])[0]: f"{prob:.2f}" for i, prob in enumerate(prediction_proba)}
-                        print(f"Probabilities: {all_probs}")
+                        # print("-" * 20)
+                        # print(f"Raw Prediction: {detected_exercise_str} (Index: {prediction_encoded})")
+                        # all_probs = {label_encoder.inverse_transform([i])[0]: f"{prob:.2f}" for i, prob in enumerate(prediction_proba)}
+                        # print(f"Probabilities: {all_probs}")
                         # --- END DEBUG ---
 
                     except Exception as e:

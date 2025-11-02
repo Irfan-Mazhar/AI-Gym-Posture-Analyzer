@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-function LoginPage() {
+function LoginPage({isLogin}) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [age,setAge] = useState(null);
     const [height, setHeight] = useState(null);
     const [weight , setWeight] = useState(null);
-    const [isLoginView, setIsLoginView] = useState(true);
+    const [isLoginView, setIsLoginView] = useState(isLogin);
     const { login } = useAuth();
     const navigate = useNavigate();
 
