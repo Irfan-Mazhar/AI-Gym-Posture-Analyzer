@@ -42,7 +42,7 @@ function Hero() {
 };
 
   return (
-    <div className="h-full md:flex md:flex-col md:items-center">
+    <div className="h-full mt-40 md:mt-0 md:flex md:flex-col md:items-center">
       <Particles
         id="tsparticles"
         init={particlesInit}
@@ -52,7 +52,7 @@ function Hero() {
 
       {/* Header Section */}
       <div className="z-1 ">
-        <h1 className="text-[#cfb498] bg-white z-1 text-3xl md:text-6xl md:mt-40 md:mb-20 font-bold font-serif">WELCOME TO FORM AI</h1>
+        <h1 className="text-[#cfb498] bg-white z-1 text-5xl md:text-6xl md:mt-40 md:mb-20 font-bold font-serif">WELCOME TO FORM AI</h1>
       </div>
       {/* Demo Video*/}
       <div className="flex md:w-300  flex-col md:flex-row items-center md:justify-between justify-center md:flex-row md:justify-center md:items-start  ">

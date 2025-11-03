@@ -5,7 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import WorkoutHistory from "./WorkoutHistory";
-import {Menu, Play, PanelsTopLeft, Settings, Calendar, LogOut} from "lucide-react"
+import {Menu, Play, PanelsTopLeft, Settings, Calendar, LogOut, ChartNoAxesCombined} from "lucide-react"
+import ProgressTrends from "./ProgressTrends";
 
 function Dashboard() {
   const { token, logout } = useAuth();
@@ -107,7 +108,7 @@ function Dashboard() {
         {/* --- Sidebar --- */}
         {/* It's fixed, so it stays on the left */}
         <aside
-          className={`fixed left-0 top-20 bg-[#cfb498] bottom-0 border-r border-black ${
+          className={`fixed z-40 left-0  top-15 bg-[#cfb498] bottom-0 border-r border-black ${
             isSidebarOpen ? "w-60" : "w-20"
           }`}
         >
@@ -134,6 +135,7 @@ function Dashboard() {
               <SidebarItem title="Overview" viewName="overview" icon={<PanelsTopLeft />}/>
               <SidebarItem title="Workout History" viewName="history" icon={<Calendar />}/>
               <SidebarItem title="Settings" viewName="settings" icon={<Settings />}/>
+              <SidebarItem title="Progress" viewName="progress" icon={<ChartNoAxesCombined />} />
             </div>
             </div>
 
@@ -147,7 +149,7 @@ function Dashboard() {
         </aside>
         {/* --- Main Content Area --- */}
         {/* This div will contain the content, offset by the sidebar's width */}
-        <main className={`${isSidebarOpen ? "ml-60" : "ml-20"} w-full p-8`}>
+        <main className={`${isSidebarOpen? "md:ml-60 ml-20":"ml-20"} w-full p-8`}>
           {/* Conditionally render the "Overview" content */}
           {activeView === "overview" && (
             <div className="flex flex-col items-center gap-10 animate-fade-in">
@@ -181,10 +183,10 @@ function Dashboard() {
                 </div>
               </div>
 
-              <div className="mt-12">
+              <div className="mt-12 z-1">
                 <Link
                   to="/analyze"
-                  className="text-white p-4 px-10 font-bold text-xl animate-pulse focus:outline-none border-2 border-[#cfb498] bg-[#cfb498] rounded-full shadow-lg hover:animate-none hover:bg-opacity-90 transition-all duration-200"
+                  className="text-white p-4  font-bold text- animate-pulse focus:outline-none border-2 border-[#cfb498] bg-[#cfb498] rounded-full shadow-lg hover:animate-none hover:bg-opacity-90 transition-all duration-200"
                 >
                   Start a Workout Session!
                 </Link>
@@ -206,6 +208,8 @@ function Dashboard() {
               </p>
             </div>
           )}
+
+          {activeView === "progress" && <ProgressTrends profileData={profileData}/>}
         </main>
       </div>
     </div>
