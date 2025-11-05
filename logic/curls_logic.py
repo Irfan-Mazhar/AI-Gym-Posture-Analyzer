@@ -1,4 +1,4 @@
-# logic/pushup_logic.py
+# logic/curls_logic.py
 import mediapipe as mp
 import pandas as pd
 from .base_corrector import BaseCorrector
@@ -7,75 +7,83 @@ from .utils import calculate_angle
 mp_pose = mp.solutions.pose
 
 class CurlsCorrector(BaseCorrector):
-    """
-    A class dedicated to analyzing push-up form, counting reps,
-    and providing feedback using a machine learning model.
-    """
     def __init__(self):
-        """
-        Initializes the PushupCorrector with push-up-specific landmarks
-        and initial state.
-        """
         super().__init__()
+        self.stage = "down" # Start with arms down for curls
+        self.baseline_l_shoulder_angle = None
+        self.baseline_r_shoulder_angle = None
         
-        # Define the specific landmarks needed for the push-up model
-        # FIX: The variable is now named self.landmarks_to_use
-        self.landmarks_to_use = [
-            mp_pose.PoseLandmark.LEFT_SHOULDER.value, mp_pose.PoseLandmark.RIGHT_SHOULDER.value,
-            mp_pose.PoseLandmark.LEFT_ELBOW.value, mp_pose.PoseLandmark.RIGHT_ELBOW.value,
-            mp_pose.PoseLandmark.LEFT_WRIST.value, mp_pose.PoseLandmark.RIGHT_WRIST.value
-        ]
-        
-        # Dynamically generate the column names for the model
-        self.column_names = []
-        # FIX: The loop now uses the correct variable name
-        for idx in self.landmarks_to_use:
-            name = mp_pose.PoseLandmark(idx).name
-            self.column_names.extend([f'{name.lower()}_x', f'{name.lower()}_y', f'{name.lower()}_z', f'{name.lower()}_visibility'])
-
-    # In logic/pushup_logic.py
+        self.column_names = ['left_elbow_angle', 'right_elbow_angle', 'left_shoulder_swing_angle', 'right_shoulder_swing_angle']
 
     def analyze_form(self, landmarks, model):
-        """
-        Analyzes push-up form using an ML model for feedback and angles for rep counting.
-        """
-        # --- 1. Rep Counting Logic (using angles) ---
-        shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-        elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
-        wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
+        # --- 1. Calculate all angles ---
+        try:
+            l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+            r_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
+            l_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+            r_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+            l_elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
+            r_elbow = [landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].y]
+            l_wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
+            r_wrist = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y]
 
-        elbow_angle = calculate_angle(shoulder, elbow, wrist)
+            left_elbow_angle = calculate_angle(l_shoulder, l_elbow, l_wrist)
+            right_elbow_angle = calculate_angle(r_shoulder, r_elbow, r_wrist)
+            left_shoulder_swing_angle = calculate_angle(l_hip, l_shoulder, l_elbow)
+            right_shoulder_swing_angle = calculate_angle(r_hip, r_shoulder, r_elbow)
+        except Exception as e:
+            return self.counter, "N/A", 0
 
-        if elbow_angle > 160:
-            self.stage = "up"
-        if self.stage == 'up' and elbow_angle < 90:
+        # --- 2. Rep Counting & Form Logic ---
+        elbow_angle_avg = (left_elbow_angle + right_elbow_angle) / 2
+        
+        form_feedback = "Good Form"
+        accuracy = 100
+
+        # --- Rep Counting Logic ---
+        if elbow_angle_avg > 160: # Arms are straight down
             self.stage = "down"
+            if self.baseline_l_shoulder_angle is None: 
+                self.baseline_l_shoulder_angle = left_shoulder_swing_angle
+                self.baseline_r_shoulder_angle = right_shoulder_swing_angle
+
+        if self.stage == 'down' and elbow_angle_avg < 70: # Arms are fully curled
+            self.stage = "up"
             self.counter += 1
         
-        # --- 2. Machine Learning Model for Form Feedback and Accuracy ---
-        # FIX: This part is now separate and will run on every frame
-        form_feedback = "N/A"
-        accuracy = 0
+        # --- Form Correction Logic ---
+        # We check for errors during the entire rep
+        if (self.stage == "up" or self.stage == "down"):
+            
+            # --- NEW: Rule 1: Check for Elbow Flare ---
+            # We check the horizontal distance between elbow and hip
+            l_elbow_x = l_elbow[0]
+            l_hip_x = l_hip[0]
+            r_elbow_x = r_elbow[0]
+            r_hip_x = r_hip[0]
+            
+            left_flare_distance = abs(l_elbow_x - l_hip_x)
+            right_flare_distance = abs(r_elbow_x - r_hip_x)
+            
+            # Set a tolerance (e.g., 0.1 is ~10% of screen width)
+            # You can adjust this tolerance to be stricter (0.08) or looser (0.15)
+            FLARE_TOLERANCE = 0.1 
+            
+            if left_flare_distance > FLARE_TOLERANCE or right_flare_distance > FLARE_TOLERANCE:
+                form_feedback = "Keep Elbows In"
+                accuracy -= 40 # Apply a penalty
+
+            # --- Rule 2: Check for Shoulder Swing (can override flare if it's also true) ---
+            if self.baseline_l_shoulder_angle is not None:
+                left_swing = abs(left_shoulder_swing_angle - self.baseline_l_shoulder_angle)
+                right_swing = abs(right_shoulder_swing_angle - self.baseline_r_shoulder_angle)
+                
+                if left_swing > 12 or right_swing > 12: 
+                    form_feedback = "Stop Swinging Shoulders" # This feedback is often more critical
+                    accuracy -= 50 # Apply a heavy penalty
         
-        if model:
-            try:
-                row = []
-                for idx in self.landmarks_to_use:
-                    lm = landmarks[idx]
-                    row.extend([lm.x, lm.y, lm.z, lm.visibility])
-                
-                import pandas as pd
-                X = pd.DataFrame([row], columns=self.column_names)
-                
-                prediction_class = model.predict(X)[0]
-                prediction_proba = model.predict_proba(X)[0]
-                
-                form_feedback = prediction_class.replace('_', ' ').title()
-                accuracy = int(max(prediction_proba) * 100)
-                
-            except Exception as e:
-                print(f"MODEL PREDICTION ERROR: {e}")
-                form_feedback = "Error"
-                accuracy = 0
-        
+        # Ensure accuracy doesn't go negative
+        accuracy = max(0, accuracy)
+
+        # Ignore the ML model (model argument is not used)
         return self.counter, form_feedback, accuracy
