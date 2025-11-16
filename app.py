@@ -24,7 +24,7 @@ from auth import token_required
 from db import mongo
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 bcrypt = Bcrypt(app)
 
 # --- Configuration for Database and JWT ---
