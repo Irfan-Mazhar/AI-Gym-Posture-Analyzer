@@ -33,7 +33,7 @@ function Dashboard() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch("http://localhost:5000/profile", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
         });

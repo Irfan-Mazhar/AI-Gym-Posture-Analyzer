@@ -17,7 +17,7 @@ function LoginPage({isLogin}) {
         const endpoint = isLoginView ? 'login' : 'register';
         try {
             // console.log("details",username, password, age, height, weight)
-            const response = await fetch(`http://localhost:5000/${endpoint}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password, age, height, weight }),

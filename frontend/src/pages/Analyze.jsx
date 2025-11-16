@@ -33,7 +33,7 @@ function Analyze() {
       if (!sessionStartTime) {
         setSessionStartTime(new Date());
       }
-      eventSource = new EventSource("http://localhost:5000/data");
+      eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/data`);
       eventSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
         const newlyDetectedExercise = data.exercise || null;
@@ -135,12 +135,12 @@ function Analyze() {
     setForm('N/A');
     setAccuracy(0);
     setDetectedExercise('Detecting...');
-    setVideoSrc(`http://localhost:5000/video?t=${new Date().getTime()}`);
+    setVideoSrc(`${import.meta.env.VITE_API_URL}/video?t=${new Date().getTime()}`);
   }
 
   async function stopWorkout() {
     const sessionEndTime = new Date();
-    await fetch("http://localhost:5000/stop", { method: "POST" });
+    await fetch(`${import.meta.env.VITE_API_URL}/stop`, { method: "POST" });
     setLiveVideo(false);
     // await setSaveSessionModal(true);
     // console.log("save session modal", saveSessionModal)
@@ -188,7 +188,7 @@ function Analyze() {
 
     try {
       console.log("Saving session:", finalSessionData);
-      const response = await fetch('http://localhost:5000/save_session', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/save_session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
