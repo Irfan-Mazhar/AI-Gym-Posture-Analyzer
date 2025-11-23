@@ -101,7 +101,8 @@ function Analyze() {
         "Keep Chest Up": "keep_chest_up",
         "Keep Back Straight": "keep_back_straight",
         "Stop Swinging Shoulders": "stop_swinging",
-        "Error": "error"
+        "Error": "error",
+        "Bad Form": "bad_form",
     };
 
     // Is the current form in our "bad list"?
