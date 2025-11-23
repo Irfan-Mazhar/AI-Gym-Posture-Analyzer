@@ -15,7 +15,7 @@ class ShoulderPressCorrector(BaseCorrector):
     def __init__(self):
         super().__init__()
         self.stage = "down" # Start with arms bent
-        self.column_names = [] # Not used, but here for compatibility
+        self.column_names = ['left_elbow_angle','right_elbow_angle','left_back_angle','right_back_angle'] # Not used, but here for compatibility
 
     def analyze_form(self, landmarks, model):
         # The 'model' argument is ignored.
@@ -32,6 +32,12 @@ class ShoulderPressCorrector(BaseCorrector):
             l_wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
             r_wrist = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y]
 
+            l_knee = [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]
+            r_knee = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
+
+            l_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+            r_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+
         except Exception as e:
             # A landmark was not visible, skip this frame
             return self.counter, "N/A", 0
@@ -39,6 +45,11 @@ class ShoulderPressCorrector(BaseCorrector):
         # --- 2. Calculate Key Angles and Positions ---
         elbow_angle = (calculate_angle(l_shoulder, l_elbow, l_wrist) + 
                        calculate_angle(r_shoulder, r_elbow, r_wrist)) / 2
+        
+        left_elbow_angle = calculate_angle(l_shoulder, l_elbow, l_wrist)
+        right_elbow_angle = calculate_angle(r_shoulder, r_elbow, r_wrist)
+        left_back_angle = calculate_angle(l_shoulder, l_hip, l_knee)
+        right_back_angle = calculate_angle(r_shoulder, r_hip, r_knee)
                        
         # Get Y (vertical) coordinates for rep counting
         wrist_y = (l_wrist[1] + r_wrist[1]) / 2
@@ -54,7 +65,7 @@ class ShoulderPressCorrector(BaseCorrector):
         
         # Set defaults for a good rep
         form_feedback = "Good Form"
-        accuracy = 100
+        # accuracy = 100
 
         # --- CHECK 1: Rep Counting ---
         # "Down" state: Arm is bent (e.g., < 100 degrees)
@@ -75,7 +86,7 @@ class ShoulderPressCorrector(BaseCorrector):
             # Error 1: Not going deep enough
             if elbow_angle > 100: # 90-100 degrees is a good bottom position
                 form_feedback = "Go Deeper"
-                accuracy = 75
+                # accuracy = 75
             
             # Error 2: Elbow Flare / Arms "Too Wide" / Forearms not vertical
             # We check the horizontal distance between wrist and elbow.
@@ -91,11 +102,28 @@ class ShoulderPressCorrector(BaseCorrector):
 
             if left_forearm_flare > FLARE_TOLERANCE or right_forearm_flare > FLARE_TOLERANCE:
                 form_feedback = "Keep Forearms Vertical" # This feedback covers both errors
-                accuracy = 60 # Penalize for bad alignment
+                # accuracy = 60 # Penalize for bad alignment
 
         # Error 3: Incomplete rep at the top
         elif self.stage == "up" and elbow_angle < 160:
             form_feedback = "Lock Out Arms"
-            accuracy = 85
+            # accuracy = 85
+        accuracy = 0
+        if model:
+            try:
+                # Create the feature row using the calculated angles
+                row = [left_elbow_angle, right_elbow_angle, left_back_angle, right_back_angle ]
+                X = pd.DataFrame([row], columns=self.column_names)
+                
+                prediction_proba = model.predict_proba(X)[0]
+                class_names = [name.lower().replace('_', '') for name in list(model.classes_)]
+                if 'goodform' in class_names:
+                    good_form_index = class_names.index('goodform')
+                    accuracy = int(prediction_proba[good_form_index] * 100)
+                else:
+                    accuracy = int(max(prediction_proba) * 100)
+            except Exception as e:
+                print(f"ShoulderPress model error: {e}")
+                accuracy = 0
 
         return self.counter, form_feedback, accuracy

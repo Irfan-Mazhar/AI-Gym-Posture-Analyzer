@@ -38,7 +38,7 @@ class CurlsCorrector(BaseCorrector):
         elbow_angle_avg = (left_elbow_angle + right_elbow_angle) / 2
         
         form_feedback = "Good Form"
-        accuracy = 100
+        
 
         # --- Rep Counting Logic ---
         if elbow_angle_avg > 160: # Arms are straight down
@@ -61,9 +61,14 @@ class CurlsCorrector(BaseCorrector):
             l_hip_x = l_hip[0]
             r_elbow_x = r_elbow[0]
             r_hip_x = r_hip[0]
+            l_wrist_x = l_wrist[0]
+            r_wrist_x = r_wrist[0]
             
             left_flare_distance = abs(l_elbow_x - l_hip_x)
             right_flare_distance = abs(r_elbow_x - r_hip_x)
+
+            left_wrist_flare_distance = abs(l_wrist_x - l_hip_x)
+            right_wrist_flare_distance = abs(r_wrist_x - r_hip_x)
             
             # Set a tolerance (e.g., 0.1 is ~10% of screen width)
             # You can adjust this tolerance to be stricter (0.08) or looser (0.15)
@@ -71,19 +76,38 @@ class CurlsCorrector(BaseCorrector):
             
             if left_flare_distance > FLARE_TOLERANCE or right_flare_distance > FLARE_TOLERANCE:
                 form_feedback = "Keep Elbows In"
-                accuracy -= 40 # Apply a penalty
+                # accuracy -= 40 # Apply a penalty
+            if left_wrist_flare_distance > FLARE_TOLERANCE or right_wrist_flare_distance > FLARE_TOLERANCE:
+                form_feedback = "Keep Arms Close"
 
             # --- Rule 2: Check for Shoulder Swing (can override flare if it's also true) ---
-            if self.baseline_l_shoulder_angle is not None:
-                left_swing = abs(left_shoulder_swing_angle - self.baseline_l_shoulder_angle)
-                right_swing = abs(right_shoulder_swing_angle - self.baseline_r_shoulder_angle)
+            # if self.baseline_l_shoulder_angle is not None:
+            #     left_swing = abs(left_shoulder_swing_angle - self.baseline_l_shoulder_angle)
+            #     right_swing = abs(right_shoulder_swing_angle - self.baseline_r_shoulder_angle)
                 
-                if left_swing > 12 or right_swing > 12: 
-                    form_feedback = "Stop Swinging Shoulders" # This feedback is often more critical
-                    accuracy -= 50 # Apply a heavy penalty
+            #     if left_swing > 12 or right_swing > 12: 
+            #         form_feedback = "Stop Swinging Shoulders" # This feedback is often more critical
+            #         accuracy -= 50 # Apply a heavy penalty
         
         # Ensure accuracy doesn't go negative
-        accuracy = max(0, accuracy)
+        # accuracy = max(0, accuracy)
+        accuracy = 0
+        if model:
+            try:
+                # Create the feature row using the calculated angles
+                row = [left_elbow_angle, right_elbow_angle, left_shoulder_swing_angle, right_shoulder_swing_angle]
+                X = pd.DataFrame([row], columns=self.column_names)
+                
+                prediction_proba = model.predict_proba(X)[0]
+                class_names = [name.lower().replace('_', '') for name in list(model.classes_)]
+                if 'goodform' in class_names:
+                    good_form_index = class_names.index('goodform')
+                    accuracy = int(prediction_proba[good_form_index] * 100)
+                else:
+                    accuracy = int(max(prediction_proba) * 100)
+            except Exception as e:
+                print(f"Curls model error: {e}")
+                accuracy = 0
 
         # Ignore the ML model (model argument is not used)
         return self.counter, form_feedback, accuracy

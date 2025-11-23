@@ -93,7 +93,7 @@ function Analyze() {
 
   useEffect(() => {
         // List of "bad form" messages. Add any others you have.
-        const badFormMessages = ["Go Deeper", "Keep Chest Up", "Keep Back Straight", "Error", "Bad Form"];
+        const badFormMessages = ["Go Deeper", "Keep Chest Up", "Keep Back Straight", "Error", "Bad Form", "Don't Sag Back", "Lower Hips" , "Keep Elbows In", "Keep Arms Close", "Lock Out Arms","Keep Forearms Vertical"];
         
         // Check if the current form is a "bad" one
         const isBadForm = badFormMessages.includes(form);

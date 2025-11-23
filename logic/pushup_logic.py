@@ -1,4 +1,3 @@
-# logic/pushup_logic.py
 import mediapipe as mp
 import pandas as pd
 from .base_corrector import BaseCorrector
@@ -13,7 +12,7 @@ class PushupCorrector(BaseCorrector):
         self.column_names = ['left_elbow_angle', 'right_elbow_angle', 'left_hip_angle', 'right_hip_angle']
 
     def analyze_form(self, landmarks, model):
-        # --- 1. Calculate all angles ---
+        # --- 1. Calculate all angles and coordinates ---
         try:
             l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
             r_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
@@ -31,6 +30,10 @@ class PushupCorrector(BaseCorrector):
             right_elbow_angle = calculate_angle(r_shoulder, r_elbow, r_wrist)
             left_hip_angle = calculate_angle(l_shoulder, l_hip, l_ankle) # Back angle
             right_hip_angle = calculate_angle(r_shoulder, r_hip, r_ankle) # Back angle
+            
+            # Calculate average body angle (for straightness)
+            body_angle = (left_hip_angle + right_hip_angle) / 2
+            
         except Exception as e:
             return self.counter, "N/A", 0
 
@@ -41,9 +44,10 @@ class PushupCorrector(BaseCorrector):
             self.stage = "down"
             self.counter += 1
         
-        # --- 3. ML Model (Angle-Based) for Form/Accuracy ---
+        # --- 3. ML Model Prediction (Base Accuracy) ---
         form_feedback = "N/A"
         accuracy = 0
+        
         if model:
             try:
                 # Create the feature row using the calculated angles
@@ -52,6 +56,8 @@ class PushupCorrector(BaseCorrector):
                 
                 prediction_class = model.predict(X)[0]
                 prediction_proba = model.predict_proba(X)[0]
+                
+                # Use model's feedback as the default
                 form_feedback = prediction_class.replace('_', ' ').title()
                 
                 class_names = [name.lower().replace('_', '') for name in list(model.classes_)]
@@ -65,4 +71,33 @@ class PushupCorrector(BaseCorrector):
                 form_feedback = "Error"
                 accuracy = 0
         
+        # --- 4. Rule-Based Overrides (Specific Bad Form) ---
+        # We override the feedback if a specific rule is broken, and penalize the accuracy
+        
+        # 165 degrees allows for a slight natural curve. Anything less is likely poor form.
+        if body_angle < 165: 
+            # We need to distinguish between Sagging (Back Bent) and Piking (Hips Raised)
+            # We do this by checking the Y-coordinate of the hip relative to the shoulder/ankle line.
+            
+            avg_shoulder_y = (l_shoulder[1] + r_shoulder[1]) / 2
+            avg_ankle_y = (l_ankle[1] + r_ankle[1]) / 2
+            avg_hip_y = (l_hip[1] + r_hip[1]) / 2
+            
+            # Calculate the expected Y of the hip if the body were a straight line
+            midpoint_y = (avg_shoulder_y + avg_ankle_y) / 2
+            
+            # In MediaPipe, Y increases downwards (0 is top, 1 is bottom)
+            # So, Smaller Y = Higher up on screen
+            # Larger Y = Lower down on screen
+            
+            if avg_hip_y < midpoint_y - 0.05: 
+                # Hip is physically HIGHER than the line -> Piking
+                form_feedback = "Lower Hips"
+                accuracy = max(0, accuracy - 30) # Heavy penalty
+                
+            elif avg_hip_y > midpoint_y + 0.05:
+                # Hip is physically LOWER than the line -> Sagging
+                form_feedback = "Don't Sag Back"
+                accuracy = max(0, accuracy - 30) # Heavy penalty
+
         return self.counter, form_feedback, accuracy
