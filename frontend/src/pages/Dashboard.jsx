@@ -8,6 +8,7 @@ import WorkoutHistory from "./WorkoutHistory";
 import {Menu, Play, PanelsTopLeft, Settings, Calendar, LogOut, ChartNoAxesCombined} from "lucide-react"
 import ProgressTrends from "./ProgressTrends";
 import { useLanguage } from "../context/LanguageContext";
+import BMIMeter from "../components/BMIMeter";
 
 function Dashboard() {
   const { token, logout } = useAuth();
@@ -181,6 +182,7 @@ function Dashboard() {
                     <span className="font-semibold">{t('dash_bmi')}</span>{" "}
                     {profileData?.bmi ? profileData.bmi.toFixed(2) : "N/A"}
                   </p>
+                  <BMIMeter bmi={profileData?.bmi}/>
                   {/* <p><span className="font-semibold">Account created at:</span> {formatDate(profileData?.created_at)}</p> */}
                 </div>
               </div>
