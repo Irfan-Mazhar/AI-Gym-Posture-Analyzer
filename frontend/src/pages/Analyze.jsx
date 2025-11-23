@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Navbar from "../components/ui/Navbar";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext";
 
 function Analyze() {
   const [liveVideo, setLiveVideo] = useState(false);
@@ -20,6 +21,8 @@ function Analyze() {
   const navigate = useNavigate();
   const lastSpokenMessage = useRef(null);
   const currentExerciseData = useRef({ name: null, startTime: null, reps: 0, accuracySum: 0, frameCount: 0 });
+  const { t, language } = useLanguage();
+  
 
   // --- No changes to your useEffect logic ---
   useEffect(() => {
@@ -92,38 +95,39 @@ function Analyze() {
   }, [liveVideo, token, sessionStartTime]);
 
   useEffect(() => {
-        // List of "bad form" messages. Add any others you have.
-        const badFormMessages = ["Go Deeper", "Keep Chest Up", "Keep Back Straight", "Error", "Bad Form"];
-        
-        // Check if the current form is a "bad" one
-        const isBadForm = badFormMessages.includes(form);
+    // Map the backend messages (which are always English) to your JSON keys
+    const feedbackMap = {
+        "Go Deeper": "go_deeper",
+        "Keep Chest Up": "keep_chest_up",
+        "Keep Back Straight": "keep_back_straight",
+        "Stop Swinging Shoulders": "stop_swinging",
+        "Error": "error"
+    };
 
-        // Only speak if it's a new bad form message
-        if (isBadForm && form !== lastSpokenMessage.current) {
-            // Cancel any previous, unfinished speech
-            window.speechSynthesis.cancel();
-            
-            // Create a new speech object
-            const utterance = new SpeechSynthesisUtterance(form);
-            
-            // (Optional) Configure voice, pitch, rate
-            utterance.lang = 'en-US';
-            utterance.rate = 1.0; 
-            
-            // Speak the message
-            window.speechSynthesis.speak(utterance);
-            
-            // Remember this message so we don't repeat it
-            lastSpokenMessage.current = form; 
-        }
+    // Is the current form in our "bad list"?
+    const messageKey = feedbackMap[form];
 
-        // If form goes back to good, reset the memory
-        // This allows the app to correct the user again on the next rep
-        if (form === "Good Form" || form === "Good Depth") {
-            lastSpokenMessage.current = null;
-        }
+    // Only speak if it's a bad form message AND it's new
+    if (messageKey && form !== lastSpokenMessage.current) {
+      window.speechSynthesis.cancel();
+      
+      // Translate the message key to the current language
+      const textToSpeak = t(messageKey); 
+      
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      
+      // Set the voice language (defined in your json files)
+      utterance.lang = t('voice_lang_code'); 
+      utterance.rate = 1.0;
+      
+      window.speechSynthesis.speak(utterance);
+      lastSpokenMessage.current = form;
+    }
 
-    }, [form]);
+    if (form.includes("Good")) {
+      lastSpokenMessage.current = null;
+    }
+  }, [form, language]);
 
   // --- No changes to your async functions logic ---
   async function startAnalysis() {
@@ -274,7 +278,7 @@ function Analyze() {
           // "Lobby" view before starting workout
           <div className="flex flex-col items-center justify-center gap-6 text-center h-[70vh]">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-800">
-              AI Gym Posture Analyzer
+             {t('app_title')}
             </h1>
             <p className="text-lg text-gray-600 max-w-lg">
               Get instant, AI-powered feedback on your exercise form. Click start to begin your analysis.
@@ -283,7 +287,7 @@ function Analyze() {
               className="font-bold bg-red-500 text-white m-4 hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl rounded-lg py-3 px-8 text-lg hover:scale-[1.03]"
               onClick={startAnalysis}
             >
-              Start Analysis
+              {t('start_analysis')}
             </button>
             {!isLoggedIn && <button
               className="font-bold bg-[#cfb498] text-white m-4 transition-all duration-200 shadow-lg hover:shadow-xl rounded-lg py-3 px-8 text-lg hover:scale-[1.03]"
@@ -299,7 +303,7 @@ function Analyze() {
               className="border-2 font-bold hover:shadow-lg bg-red-500 text-white rounded-lg py-3 px-8 text-lg hover:bg-red-600 transition-all duration-200"
               onClick={stopWorkout} 
             >
-              Stop Workout
+              {t('stop_workout')}
             </button>
 
             {/* Main analysis area */}
@@ -310,16 +314,18 @@ function Analyze() {
                 <img
                   src={videoSrc}
                   alt="AI Gym Trainer"
-                  className="rounded-xl shadow-2xl border-4 border-orange-500 w-full"
+                  className="rounded-xl shadow-2xl border-4 border-orange-500 w-full aspect-[3/4] md:aspect-[4/3] object-cover"
                 />
               </div>
 
               {/* Stats Panel: Restyled for a modern "dashboard card" look */}
-              <div className="w-full lg:w-96 bg-gray-800 rounded-xl shadow-2xl p-6 text-white space-y-6">
+              <div className="w-full lg:w-96 md:h-155 bg-gray-800 rounded-xl shadow-2xl p-6 text-white space-y-6 md:flex flex-col justify-between ">
+
+                <div>
                 <h2 className="text-2xl font-bold mb-4 text-orange-500 text-center uppercase tracking-wider">
                   Workout Stats
                 </h2>
-                
+
                 {/* Detected Exercise */}
                 <div className="text-center bg-gray-700 p-3 rounded-lg">
                   <p className="text-sm font-medium text-gray-400 uppercase">Exercise</p>
@@ -327,16 +333,19 @@ function Analyze() {
                     {detectedExercise.replace('_', ' ')}
                   </p>
                 </div>
+                </div>
+
+                <div className="flex flex-col gap-4 md:mb-15">
 
                 {/* Reps */}
                 <div className="flex justify-between items-baseline p-3 bg-gray-700 rounded-lg">
-                  <p className="text-lg font-medium text-gray-400">REPS</p>
+                  <p className="text-lg font-medium text-gray-400">{t('reps')}</p>
                   <p className="text-4xl font-bold text-green-400 font-mono">{reps}</p>
                 </div>
 
                 {/* Form */}
                 <div className="flex justify-between items-baseline p-3 bg-gray-700 rounded-lg">
-                  <p className="text-lg font-medium text-gray-400">FORM</p>
+                  <p className="text-lg font-medium text-gray-400">{t('form')}</p>
                   <p
                     className={`text-3xl font-bold ${
                       form === "Good Form" || form === "Good Depth"
@@ -350,7 +359,7 @@ function Analyze() {
 
                 {/* Accuracy */}
                 <div className="flex justify-between items-baseline p-3 bg-gray-700 rounded-lg">
-                  <p className="text-lg font-medium text-gray-400">ACCURACY</p>
+                  <p className="text-lg font-medium text-gray-400">{t('accuracy')}</p>
                   <p
                     className={`text-4xl font-bold font-mono ${
                       accuracy > 85 ? "text-green-400" : "text-yellow-500"
@@ -362,6 +371,7 @@ function Analyze() {
               </div>
             </div>
           </div>
+                </div>
         )}
       </main>
     </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 function LoginPage({isLogin}) {
     const [username, setUsername] = useState('');
@@ -10,6 +11,7 @@ function LoginPage({isLogin}) {
     const [weight , setWeight] = useState(null);
     const [isLoginView, setIsLoginView] = useState(isLogin);
     const { login } = useAuth();
+    const {t} = useLanguage();
     const navigate = useNavigate();
 
     const handleAuth = async (e) => {
@@ -42,42 +44,42 @@ function LoginPage({isLogin}) {
     return (
         <div className="min-h-screen w-full flex items-center justify-center bg-[#cfb498] text-white">
             <div className="w-full max-w-md p-8 space-y-6  bg-white rounded-lg shadow-lg">
-                <h1 className="text-3xl font-bold text-center text-black">{isLoginView ? 'Log In to FormAI' : 'Register for FormAI'}</h1>
+                <h1 className="text-3xl font-bold text-center text-black">{isLoginView ? t('login_heading') : t('register_heading')}</h1>
                 <form onSubmit={handleAuth} className="space-y-6">
                     <div>
-                        <label className="block text-sm text-black text-left font-medium">Enter your Username</label>
+                        <label className="block text-sm text-black text-left font-medium">{t('login_subtitle1')}</label>
                         <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                     </div>
                     <div>
-                        <label className="block text-sm text-black text-left font-medium">Enter your Password</label>
+                        <label className="block text-sm text-black text-left font-medium">{t('login_subtitle2')}</label>
                         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                     </div>
                     {!isLoginView? 
                     <>
                         <div>
-                            <label className="block text-sm text-black text-left font-medium">Enter your Age</label>
+                            <label className="block text-sm text-black text-left font-medium">{t('login_age')}</label>
                             <input type="number" value={age} onChange={(e) => setAge(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                         </div>
                         <div>
-                            <label className="block text-sm text-black text-left font-medium">Enter your Height in cm</label>
+                            <label className="block text-sm text-black text-left font-medium">{t('login_height')}</label>
                             <input type="number" value={height} onChange={(e) => setHeight(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                         </div>
                         <div>
-                            <label className="block text-sm text-black text-left font-medium">Enter your Weight in kg</label>
+                            <label className="block text-sm text-black text-left font-medium">{t('login_weight')}</label>
                             <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                         </div>
                     </>
                         : null}
                     <button type="submit" className="w-full px-4 py-2 font-bold text-white bg-[#cfb498] rounded-md hover:bg-blue-700">
-                        {isLoginView ? 'Log In' : 'Register'}
+                        {isLoginView ? t('login_button') : t('register_button')}
                     </button>
                 </form>
                 <div className="text-sm text-center text-black">
                     <button onClick={() => navigate('/')} className="font-medium text-gray-400 hover:underline mb-4">
-                        &larr; Back to Home
+                        &larr; {t('login_back')}
                     </button>
                     <p>
-                        {isLoginView ? "Don't have an account?" : "Already have an account?"}
+                        {isLoginView ? t('login_change1') : t('login_change2')}
                         <button onClick={() => setIsLoginView(!isLoginView)} className="ml-2  font-medium text-blue-400 hover:underline">
                             {isLoginView ? 'Register' : 'Log In'}
                         </button>

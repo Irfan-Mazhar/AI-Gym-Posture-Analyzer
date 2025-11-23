@@ -7,12 +7,14 @@ import { useNavigate } from "react-router-dom";
 import WorkoutHistory from "./WorkoutHistory";
 import {Menu, Play, PanelsTopLeft, Settings, Calendar, LogOut, ChartNoAxesCombined} from "lucide-react"
 import ProgressTrends from "./ProgressTrends";
+import { useLanguage } from "../context/LanguageContext";
 
 function Dashboard() {
   const { token, logout } = useAuth();
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const {t} = useLanguage();
 
   // State to manage which view is active
   // We'll default to 'overview'
@@ -127,15 +129,15 @@ function Dashboard() {
                 to="/analyze"
                 className="block p-3 bg-white border m-2  rounded text-yellow-900 font-bold hover:bg-yellow-200 transition-all duration-200"
               >
-                {isSidebarOpen?<h2 className=" flex items-center justify-center gap-1">Start Workout <span><Play /></span></h2>:<h2 className="flex items-center justify-center"><Play /></h2>}
+                {isSidebarOpen?<h2 className=" flex items-center justify-center gap-1">{t('sidebar1')} <span><Play /></span></h2>:<h2 className="flex items-center justify-center"><Play /></h2>}
               </Link>
               {/* Add more items here */}
             <div>
               {/* Use the helper component for state-based view switching */}
-              <SidebarItem title="Overview" viewName="overview" icon={<PanelsTopLeft />}/>
-              <SidebarItem title="Workout History" viewName="history" icon={<Calendar />}/>
-              <SidebarItem title="Settings" viewName="settings" icon={<Settings />}/>
-              <SidebarItem title="Progress" viewName="progress" icon={<ChartNoAxesCombined />} />
+              <SidebarItem title={t('sidebar2')} viewName="overview" icon={<PanelsTopLeft />}/>
+              <SidebarItem title={t('sidebar3')} viewName="history" icon={<Calendar />}/>
+              <SidebarItem title={t('sidebar4')} viewName="settings" icon={<Settings />}/>
+              <SidebarItem title={t('sidebar5')} viewName="progress" icon={<ChartNoAxesCombined />} />
             </div>
             </div>
 
@@ -143,7 +145,7 @@ function Dashboard() {
               onClick={logout}
               className="p-3 bg-gray-100 border m-2 rounded cursor-pointer hover:bg-red-100 hover:text-red-700 transition-all duration-200"
             >
-              {isSidebarOpen?<h2 className="flex items-center justify-center gap-1">Logout<span><LogOut /></span></h2>:<h2 className="flex items-center justify-center"><LogOut /></h2>}
+              {isSidebarOpen?<h2 className="flex items-center justify-center gap-1">{t('logout')}<span><LogOut /></span></h2>:<h2 className="flex items-center justify-center"><LogOut /></h2>}
             </div>
           </div>
         </aside>
@@ -154,29 +156,29 @@ function Dashboard() {
           {activeView === "overview" && (
             <div className="flex flex-col items-center gap-10 animate-fade-in">
               <h1 className="text-[#cfb498] font-bold text-5xl">
-                Welcome, {profileData?.username}!
+                {t('dash_title')} {profileData?.username}!
               </h1>
 
               {/* Restyled Profile Card */}
               <div className="w-full max-w-lg bg-white rounded-lg shadow-xl p-6 text-left">
                 <h2 className="text-2xl text-center font-semibold mb-4 border-b pb-2 text-gray-800">
-                  User Data
+                  {t('dash_subtitle')}
                 </h2>
                 <div className="space-y-3 text-lg text-gray-700">
                   <p>
-                    <span className="font-semibold">Age:</span>{" "}
+                    <span className="font-semibold">{t('dash_age')}</span>{" "}
                     {profileData?.age}
                   </p>
                   <p>
-                    <span className="font-semibold">Height:</span>{" "}
+                    <span className="font-semibold">{t('dash_height')}</span>{" "}
                     {profileData?.height} cm
                   </p>
                   <p>
-                    <span className="font-semibold">Weight:</span>{" "}
+                    <span className="font-semibold">{t('dash_weight')}</span>{" "}
                     {profileData?.weight} kg
                   </p>
                   <p>
-                    <span className="font-semibold">BMI:</span>{" "}
+                    <span className="font-semibold">{t('dash_bmi')}</span>{" "}
                     {profileData?.bmi ? profileData.bmi.toFixed(2) : "N/A"}
                   </p>
                   {/* <p><span className="font-semibold">Account created at:</span> {formatDate(profileData?.created_at)}</p> */}
@@ -188,7 +190,7 @@ function Dashboard() {
                   to="/analyze"
                   className="text-white p-4  font-bold text- animate-pulse focus:outline-none border-2 border-[#cfb498] bg-[#cfb498] rounded-full shadow-lg hover:animate-none hover:bg-opacity-90 transition-all duration-200"
                 >
-                  Start a Workout Session!
+                  {t('dash_button')}
                 </Link>
               </div>
             </div>
