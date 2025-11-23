@@ -9,6 +9,7 @@ function Navbar() {
         if(token){
             setIsloggedIn(true);
         }
+        else setIsloggedIn(false);
     },[])
     return (
         <nav className="w-full  bg-[#cfb498]  h-15 flex sticky top-0 md:sticky md:top-0 z-99 justify-between items-center  md:flex-row">
