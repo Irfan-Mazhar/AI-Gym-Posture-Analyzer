@@ -3,9 +3,14 @@ import en from '../translations/en.json';
 import es from '../translations/es.json';
 import hi from '../translations/hi.json'
 import kn from '../translations/kn.json'
+import fr from '../translations/fr.json'
+import ta from '../translations/ta.json'
+import ml from '../translations/ml.json'
+import ja from '../translations/ja.json'
+import ar from '../translations/ar.json'
 
 // Add other languages here if needed
-const translations = { en, es, hi, kn };
+const translations = { en, es, hi, kn, fr, ta, ml, ja, ar };
 
 const LanguageContext = createContext();
 

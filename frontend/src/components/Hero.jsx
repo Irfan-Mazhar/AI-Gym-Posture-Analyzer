@@ -75,7 +75,7 @@ function Hero() {
               to="/analyze"
               className="text-white font-bold animate-pulse focus:none border-2 hover:cursor-pointer bg-[#cfb498] p-3 rounded-3xl md:flex px-24 md:w-fit md:px-12"
             >
-              Try Now!
+              {t('trynow')}
             </Link>
           </div>
         </div>

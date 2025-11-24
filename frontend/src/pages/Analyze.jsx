@@ -103,6 +103,12 @@ function Analyze() {
         "Stop Swinging Shoulders": "stop_swinging",
         "Error": "error",
         "Bad Form": "bad_form",
+        "Keep Arms Close": "keep_arms_close",
+        "Lock Out Arms": "lock_out_arms",
+        "Keep Forearms Vertical": "keep_forearms_vertical",
+        "Keep Elbows In": "keep_elbows_in",
+        "Lower Hips": "lower_hips",
+        "Don't Sag Back": "dont_sag_back"
     };
 
     // Is the current form in our "bad list"?
@@ -243,7 +249,7 @@ function Analyze() {
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm  ">
           {/* Modal Content */}
           <div className="bg-[#cfb498] shadow-sm shadow-gray-300 p-6 rounded-lg shadow-xl text-white w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">Save Your Session?</h2>
+            <h2 className="text-2xl font-bold mb-4">{t('save_session_title')}</h2>
             {/* <p className="mb-4 text-gray-100">Name your workout session to save it to your history.</p> */}
             <div>
               <input
@@ -260,13 +266,13 @@ function Analyze() {
                 onClick={handleDiscardSession}
                 className="px-4 py-2 font-semibold text-gray-700 hover:cursor-pointer bg-gray-200 rounded-md hover:bg-gray-300"
               >
-                Discard Session
+                {t('discard_session')}
               </button>
               <button
                 onClick={handleSaveSession}
                 className="px-4 py-2 font-semibold text-black hover:cursor-pointer bg-yellow-200 rounded-md hover:bg-yellow-300"
               >
-                Save Session
+                {t('save_session')}
               </button>
             </div>
           </div>
@@ -282,7 +288,7 @@ function Analyze() {
              {t('app_title')}
             </h1>
             <p className="text-lg text-gray-600 max-w-lg">
-              Get instant, AI-powered feedback on your exercise form. Click start to begin your analysis.
+              {t('analysis_subtitle')}
             </p>
             <button
               className="font-bold bg-red-500 text-white m-4 hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl rounded-lg py-3 px-8 text-lg hover:scale-[1.03]"
@@ -294,7 +300,7 @@ function Analyze() {
               className="font-bold bg-[#cfb498] text-white m-4 transition-all duration-200 shadow-lg hover:shadow-xl rounded-lg py-3 px-8 text-lg hover:scale-[1.03]"
               onClick={() => navigate("/login/register")}
             >
-              Sign Up to save your Progress!
+              {t('signup')}
             </button>}
           </div>
         ) : (
@@ -324,12 +330,12 @@ function Analyze() {
 
                 <div>
                 <h2 className="text-2xl font-bold mb-4 text-orange-500 text-center uppercase tracking-wider">
-                  Workout Stats
+                  {t('stats')}
                 </h2>
 
                 {/* Detected Exercise */}
                 <div className="text-center bg-gray-700 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-gray-400 uppercase">Exercise</p>
+                  <p className="text-sm font-medium text-gray-400 uppercase">{t('exercise')}</p>
                   <p className="text-3xl font-bold capitalize">
                     {detectedExercise.replace('_', ' ')}
                   </p>
@@ -349,12 +355,24 @@ function Analyze() {
                   <p className="text-lg font-medium text-gray-400">{t('form')}</p>
                   <p
                     className={`text-3xl font-bold ${
-                      form === "Good Form" || form === "Good Depth"
+                      form === t('good_form') || form === t('good_depth')
                         ? "text-green-400"
                         : "text-red-500"
                     }`}
                   >
-                    {form}
+                    {form==="Go Deeper"?t('go_deeper'):
+                    form==="Keep Chest Up"?t('keep_chest_up'):
+                    form==="Keep Back Straight"?t('keep_back_straight'):
+                    form==="Bad Form"?t('bad_form'):
+                    form==="Lock Out Arms"?t('lock_out_arms'):
+                    form==="Keep Forearms Vertical"?t('keep_forearms_vertical'):
+                    form==="Keep Elbows In"?t('keep_elbows_in'):
+                    form==="Lower Hips"?t('Lower Hips'):
+                    form==="Don't Sag Back"?t('dont_sag_back'):
+                    form==="Good Form"?t('good_form'):
+                    form==="Good Depth"?t('good_depth'):
+                    form==="Keep Arms Close"?t('keep_arms_close'):form
+                    }
                   </p>
                 </div>
 

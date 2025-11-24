@@ -12,7 +12,12 @@ function Navbar() {
     { code: "en", label: "English" },
     { code: "es", label: "Spanish" },
     { code: "hi", label: "Hindi" },
-    { code: "kn", label: "Kannada"}
+    { code: "kn", label: "Kannada"},
+    { code: "fr", label: "French"},
+    { code: "ta", label: "Tamil"},
+    { code: "ml", label: "Malayalam"},
+    { code: "ja", label: "Japanese"},
+    { code: "ar", label: "Arabic"}
   ];
 
   useEffect(() => {
@@ -32,7 +37,7 @@ function Navbar() {
           {!isLoggedIn ? (
             <>
               <li className="hover:cursor-pointer hover:text-gray-300">
-                <Link to="/">Home</Link>
+                <Link to="/">{t('navbar_home')}</Link>
               </li>
               
               
@@ -40,7 +45,7 @@ function Navbar() {
           ) : (
             <>
             <li className="hover:cursor-pointer hover:text-gray-300">
-              <Link to="/dashboard">Home</Link>
+              <Link to="/dashboard">{t('navbar_home')}</Link>
             </li>
             <select
                 value={language}

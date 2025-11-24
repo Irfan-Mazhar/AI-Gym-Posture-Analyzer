@@ -1,12 +1,13 @@
 // src/pages/WorkoutHistory.jsx
 import { useState } from 'react';
 import React from "react";
+import { useLanguage } from '../context/LanguageContext';
 
 // No need to import useAuth/logout/navigate, as this is handled by the parent Dashboard
 function WorkoutHistory({ profileData }) {
   // This state is local to the history list, which is correct.
   const [expandedIndex, setExpandedIndex] = useState(null);
-
+  const {t} = useLanguage();
   // Helper to format date strings
   const formatDate = (isoString) => {
     if (!isoString) return 'N/A';
@@ -27,7 +28,7 @@ function WorkoutHistory({ profileData }) {
   return (
     // This is now the main container for the history *page content*
     <div className="w-full max-w-4xl mx-auto animate-fade-in">
-      <h1 className="text-[#cfb4a0] mt-10 mb-8 font-bold text-5xl text-center">Workout History</h1>
+      <h1 className="text-[#cfb4a0] mt-10 mb-8 font-bold text-5xl text-center">{t('sidebar3')}</h1>
 
       <div className="flex flex-col gap-4">
         {/* Check if sessions exist and is an array */}

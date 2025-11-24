@@ -116,6 +116,51 @@ def get_profile(current_user):
         'user_data': current_user
     })
 
+# In app.py
+
+@app.route('/update_profile', methods=['POST'])
+@token_required
+def update_profile(current_user):
+    data = request.get_json()
+    
+    # Get new values (or keep old ones if not provided)
+    new_age = data.get('age', current_user.get('age'))
+    new_height = data.get('height', current_user.get('height'))
+    new_weight = data.get('weight', current_user.get('weight'))
+
+    # Basic validation
+    try:
+        new_age = int(new_age)
+        new_height = float(new_height)
+        new_weight = float(new_weight)
+    except (ValueError, TypeError):
+        return jsonify({'message': 'Invalid input data types'}), 400
+
+    # Recalculate BMI
+    new_bmi = None
+    try:
+        height_m = new_height / 100
+        if height_m > 0:
+            new_bmi = float(new_weight) / (height_m ** 2)
+    except Exception:
+        new_bmi = current_user.get('bmi') # Fallback
+
+    # Update MongoDB
+    try:
+        mongo.db.users.update_one(
+            {'username': current_user['username']},
+            {'$set': {
+                'age': new_age,
+                'height': new_height,
+                'weight': new_weight,
+                'bmi': new_bmi
+            }}
+        )
+        return jsonify({'message': 'Profile updated successfully'}), 200
+    except Exception as e:
+        print(f"Error updating profile: {e}")
+        return jsonify({'message': 'Database error'}), 500
+
 @app.route('/save_session', methods=['POST'])
 @token_required
 def save_session(current_user):
@@ -212,7 +257,7 @@ def video_generator():
 
     last_predicted_exercise = None
     prediction_streak = 0
-    STABILITY_THRESHOLD = 20 # You can adjust this
+    STABILITY_THRESHOLD = 10 # You can adjust this
 
     with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
         while cap and cap.isOpened():

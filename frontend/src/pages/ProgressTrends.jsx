@@ -1,4 +1,5 @@
 import React,{ useMemo, useState } from "react";
+import { useLanguage } from "../context/LanguageContext";
 import { 
     BarChart, 
     Bar, 
@@ -37,7 +38,7 @@ const formatDuration = (ms) => {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 function ProgressTrends({profileData}) {
-
+    const {t} = useLanguage();
     const [timeFilter, setTimeFilter] = useState('all');
     const chartData = useMemo(() => {
         if (!profileData?.sessions || profileData.sessions.length === 0) {
@@ -208,7 +209,7 @@ function ProgressTrends({profileData}) {
 
     return (
         <div>
-            <h1 className="text-[#cfb4a0] mt-10 mb-8 font-bold text-5xl text-center">Progress Trends</h1>
+            <h1 className="text-[#cfb4a0] mt-10 mb-8 font-bold text-5xl text-center">{t('sidebar5')}</h1>
             {(chartData.length === 0)? 
             <p>No workouts to show here</p>
             :

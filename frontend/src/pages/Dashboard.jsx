@@ -9,6 +9,7 @@ import {Menu, Play, PanelsTopLeft, Settings, Calendar, LogOut, ChartNoAxesCombin
 import ProgressTrends from "./ProgressTrends";
 import { useLanguage } from "../context/LanguageContext";
 import BMIMeter from "../components/BMIMeter";
+import Setting from "./Setting";
 
 function Dashboard() {
   const { token, logout } = useAuth();
@@ -21,6 +22,7 @@ function Dashboard() {
   // We'll default to 'overview'
   const [activeView, setActiveView] = useState("overview");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const navigate = useNavigate();
 
@@ -58,7 +60,7 @@ function Dashboard() {
       }
     };
     fetchProfile();
-  }, [token, logout, navigate]);
+  }, [token, logout, navigate, refreshTrigger]);
 
   // --- Render Logic ---
 
@@ -205,12 +207,10 @@ function Dashboard() {
 
           {/* Placeholder for Settings */}
           {activeView === "settings" && (
-            <div>
-              <h1 className="text-[#cfb498] font-bold text-5xl">Settings</h1>
-              <p className="mt-4 text-gray-700">
-                Profile editing form will go here.
-              </p>
-            </div>
+            <Setting
+                  profileData={profileData} 
+                  onUpdateSuccess={() => setRefreshTrigger(prev => prev + 1)} 
+              />
           )}
 
           {activeView === "progress" && <ProgressTrends profileData={profileData}/>}
