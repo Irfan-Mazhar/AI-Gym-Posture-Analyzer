@@ -213,35 +213,6 @@ function ProgressTrends({profileData}) {
             <p>No workouts to show here</p>
             :
             <>
-            {/* <section className="p-6 bg-white rounded-lg shadow-xl border border-gray-200 mb-12">
-                <h2 className="text-2xl font-semibold mb-6 text-gray-800">Total Reps per Session</h2>
-                ResponsiveContainer makes the chart fit its parent div
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="name" stroke="#666" />
-                        <YAxis stroke="#666" domain={[0, 'auto']}/>
-                        <Tooltip wrapperClassName="rounded shadow-md" />
-                        <Legend />
-                        <Bar dataKey="Total Reps" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>
-            </section>
-
-            Chart 2: Average Accuracy per Session (Line Chart)
-            <section className="p-6 bg-white rounded-lg shadow-xl border border-gray-200">
-                <h2 className="text-2xl font-semibold mb-6 text-gray-800">Session Accuracy Over Time</h2>
-                <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="name" stroke="#666" />
-                        <YAxis domain={[0, 100]} stroke="#666" unit="%" />
-                        <Tooltip wrapperClassName="rounded shadow-md" />
-                        <Legend />
-                        <Line type="monotone" dataKey="Average Accuracy" stroke="#10b981" strokeWidth={3} activeDot={{ r: 8 }} />
-                    </LineChart>
-                </ResponsiveContainer>
-            </section> */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             <section className="p-6  bg-white rounded-lg shadow-xl border border-gray-200">
