@@ -302,6 +302,10 @@ function Analyze() {
             >
               {t('signup')}
             </button>}
+            <div>
+              <h3 className="text-xl font-medium">Are you a beginner? Not sure what to do? Try our AI-Fitness Coach and get personalised workout recommendations.</h3>
+              <button className="rounded-lg p-2 m-2 text-lg font-bold bg-blue-300 hover:cursor-pointer"><a href="https://ai-fitness-coach-opal.vercel.app/">AI Fitness Coach</a></button>
+            </div>
           </div>
         ) : (
           // "Active Workout" view

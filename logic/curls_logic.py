@@ -105,9 +105,10 @@ class CurlsCorrector(BaseCorrector):
                     accuracy = int(prediction_proba[good_form_index] * 100)
                 else:
                     accuracy = int(max(prediction_proba) * 100)
+                final_accuracy = self.smooth_accuracy(accuracy)
             except Exception as e:
                 print(f"Curls model error: {e}")
                 accuracy = 0
 
         # Ignore the ML model (model argument is not used)
-        return self.counter, form_feedback, accuracy
+        return self.counter, form_feedback, final_accuracy

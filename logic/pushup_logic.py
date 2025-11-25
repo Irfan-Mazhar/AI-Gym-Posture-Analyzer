@@ -66,6 +66,7 @@ class PushupCorrector(BaseCorrector):
                     accuracy = int(prediction_proba[good_form_index] * 100)
                 else:
                     accuracy = int(max(prediction_proba) * 100)
+                final_accuracy = self.smooth_accuracy(accuracy)
             except Exception as e:
                 print(f"Pushup model error: {e}")
                 form_feedback = "Error"
@@ -100,4 +101,4 @@ class PushupCorrector(BaseCorrector):
                 form_feedback = "Don't Sag Back"
                 accuracy = max(0, accuracy - 30) # Heavy penalty
 
-        return self.counter, form_feedback, accuracy
+        return self.counter, form_feedback, final_accuracy
