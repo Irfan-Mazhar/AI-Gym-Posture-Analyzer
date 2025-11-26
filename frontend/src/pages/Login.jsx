@@ -48,39 +48,39 @@ function LoginPage({isLogin}) {
                 <form onSubmit={handleAuth} className="space-y-6">
                     <div>
                         <label className="block text-sm text-black text-left font-medium">{t('login_subtitle1')}</label>
-                        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
+                        <input type="text" value={username?.undefined} onChange={(e) => setUsername(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                     </div>
                     <div>
                         <label className="block text-sm text-black text-left font-medium">{t('login_subtitle2')}</label>
-                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
+                        <input type="password" value={password?.undefined} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                     </div>
                     {!isLoginView? 
                     <>
                         <div>
                             <label className="block text-sm text-black text-left font-medium">{t('login_age')}</label>
-                            <input type="number" value={age} onChange={(e) => setAge(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
+                            <input type="number" value={age?.undefined} onChange={(e) => setAge(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                         </div>
                         <div>
                             <label className="block text-sm text-black text-left font-medium">{t('login_height')}</label>
-                            <input type="number" value={height} onChange={(e) => setHeight(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
+                            <input type="number" value={height?.undefined} onChange={(e) => setHeight(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                         </div>
                         <div>
                             <label className="block text-sm text-black text-left font-medium">{t('login_weight')}</label>
-                            <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
+                            <input type="number" value={weight?.undefined} onChange={(e) => setWeight(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                         </div>
                     </>
                         : null}
-                    <button type="submit" className="w-full px-4 py-2 font-bold text-white bg-[#cfb498] rounded-md hover:bg-blue-700">
+                    <button type="submit" className="w-full px-4 py-2 font-bold text-white bg-[#cfb498] rounded-md hover:bg-blue-700 cursor-pointer">
                         {isLoginView ? t('login_button') : t('register_button')}
                     </button>
                 </form>
                 <div className="text-sm text-center text-black">
-                    <button onClick={() => navigate('/')} className="font-medium text-gray-400 hover:underline mb-4">
+                    <button onClick={() => navigate('/')} className="font-medium cursor-pointer text-gray-400 hover:underline mb-4">
                         &larr; {t('login_back')}
                     </button>
                     <p>
                         {isLoginView ? t('login_change1') : t('login_change2')}
-                        <button onClick={() => setIsLoginView(!isLoginView)} className="ml-2  font-medium text-blue-400 hover:underline">
+                        <button onClick={() => setIsLoginView(!isLoginView)} className="ml-2  font-medium text-blue-400 hover:underline cursor-pointer">
                             {isLoginView ? 'Register' : 'Log In'}
                         </button>
                     </p>
