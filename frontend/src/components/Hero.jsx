@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import Particles from "react-tsparticles";
 import {loadSlim} from "tsparticles-slim";
 import { useLanguage } from "../context/LanguageContext";
+import VideoWithMuteButton from "./VideoWithMuteButton";
 function Hero() {
   const particlesInit = useCallback(async (engine) => {
     await loadSlim(engine);
@@ -60,8 +61,8 @@ function Hero() {
       {/* Demo Video*/}
       <div className="flex md:w-300  flex-col md:flex-row items-center md:justify-between justify-center md:flex-row md:justify-center md:items-start  ">
         <div className="md:flex bg-white z-1 md:flex-col items-center justify-center">
-          <div className=" shadow-xl  border-white rounded-lg p-3 m-4  mb-2   hover:text-white text-black h-50 md:h-90 md:w-150">
-            <video src="/demo-video.mp4" loop muted autoPlay className="fit-cover"></video>
+          <div className="">
+            <VideoWithMuteButton videoSrc={'./demoVideo2.0.mp4'} />
           </div>
           <p className="text-gray-400 text-md italic md:text-2xl text-center md:ml-14">Demo Video</p>
         </div>
