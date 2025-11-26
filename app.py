@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 import pandas as pd
 import numpy as np
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 # Load environment variables from .env file
 load_dotenv()
@@ -188,8 +189,11 @@ def save_session(current_user):
     # --- Convert Timestamps ---
     try:
         # Parse ISO strings sent from frontend (handle potential timezone issues)
-        start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00")).replace(tzinfo=timezone.utc)
-        end_time = datetime.fromisoformat(end_time_str.replace("Z", "+00:00")).replace(tzinfo=timezone.utc)
+        start_time_utc = datetime.fromisoformat(start_time_str.replace("Z", "+00:00")).replace(tzinfo=timezone.utc)
+        end_time_utc = datetime.fromisoformat(end_time_str.replace("Z", "+00:00")).replace(tzinfo=timezone.utc)
+        local_tz = ZoneInfo("Asia/Kolkata")
+        start_time = start_time_utc.astimezone(local_tz).replace(tzinfo=None)
+        end_time = end_time_utc.astimezone(local_tz).replace(tzinfo=None)
     except (ValueError, TypeError) as e:
         print(f"Timestamp parsing error: {e}")
         return jsonify({'message': 'Invalid startTime or endTime format (ISO 8601 expected)'}), 400

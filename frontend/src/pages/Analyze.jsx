@@ -291,20 +291,20 @@ function Analyze() {
               {t('analysis_subtitle')}
             </p>
             <button
-              className="font-bold bg-red-500 text-white m-4 hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl rounded-lg py-3 px-8 text-lg hover:scale-[1.03]"
+              className="font-bold bg-red-500 cursor-pointer text-white m-4 hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl rounded-lg py-3 px-8 text-lg hover:scale-[1.03]"
               onClick={startAnalysis}
             >
               {t('start_analysis')}
             </button>
             {!isLoggedIn && <button
-              className="font-bold bg-[#cfb498] text-white m-4 transition-all duration-200 shadow-lg hover:shadow-xl rounded-lg py-3 px-8 text-lg hover:scale-[1.03]"
+              className="font-bold bg-[#cfb498] cursor-pointer text-white m-4 transition-all duration-200 shadow-lg hover:shadow-xl rounded-lg py-3 px-8 text-lg hover:scale-[1.03]"
               onClick={() => navigate("/login/register")}
             >
               {t('signup')}
             </button>}
             <div>
-              <h3 className="text-xl font-medium">Are you a beginner? Not sure what to do? Try our AI-Fitness Coach and get personalised workout recommendations.</h3>
-              <button className="rounded-lg p-2 m-2 text-lg font-bold bg-blue-300 hover:cursor-pointer"><a href="https://ai-fitness-coach-opal.vercel.app/">AI Fitness Coach</a></button>
+              <h3 className="text-xl font-medium max-w-xl">Are you a beginner? Not sure what to do? Try our AI-Fitness Coach and get personalised workout recommendations.</h3>
+              <button className="hover:scale-[1.03] rounded-lg transition-all duration-200 shadow-lg text-white hover:shadow-xl px-8 py-3 m-2 text-lg font-bold bg-blue-300 hover:cursor-pointer"><a target="_blank" href="https://ai-fitness-coach-opal.vercel.app/">AI Fitness Coach</a></button>
             </div>
           </div>
         ) : (

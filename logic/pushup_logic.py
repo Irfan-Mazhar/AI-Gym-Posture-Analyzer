@@ -45,7 +45,7 @@ class PushupCorrector(BaseCorrector):
             self.counter += 1
         
         # --- 3. ML Model Prediction (Base Accuracy) ---
-        form_feedback = "N/A"
+        form_feedback = "Good Form"
         accuracy = 0
         
         if model:
@@ -58,7 +58,7 @@ class PushupCorrector(BaseCorrector):
                 prediction_proba = model.predict_proba(X)[0]
                 
                 # Use model's feedback as the default
-                form_feedback = prediction_class.replace('_', ' ').title()
+                # form_feedback = prediction_class.replace('_', ' ').title()
                 
                 class_names = [name.lower().replace('_', '') for name in list(model.classes_)]
                 if 'goodform' in class_names:

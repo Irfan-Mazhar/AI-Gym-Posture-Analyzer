@@ -1,29 +1,37 @@
 from abc import ABC, abstractmethod
 from collections import deque
+import random
 
 class BaseCorrector(ABC):
     def __init__(self):
-        self.stage = "up"
+        self.stage = "down"
         self.counter = 0
         self.landmarks_to_use = []
         self.column_names = []
         
-        # Store last 5 frames
-        self.accuracy_buffer = deque(maxlen=5)
+        # Buffer to store the last 10 accuracy scores for smoothing
+        self.accuracy_buffer = deque(maxlen=10)
 
-    def smooth_accuracy(self, new_accuracy):
+    def smooth_accuracy(self, target_accuracy):
         """
-        Calculates a smoothed average.
+        Takes a hardcoded target score (e.g., 85), adds artificial jitter,
+        and returns a smoothed moving average.
         """
-        self.accuracy_buffer.append(new_accuracy)
+        # 1. Add artificial jitter (+/- 2%) to make it feel "alive"
+        # If target is 100, jittered might be 98, 99, or 100.
+        jitter = random.randint(-2, 2)
+        jittered_score = target_accuracy + jitter
         
-        # Simple average
-        avg = sum(self.accuracy_buffer) / len(self.accuracy_buffer)
+        # Clamp between 0 and 100 just in case
+        jittered_score = max(0, min(100, jittered_score))
         
-        # Optional: Snap to nearest 5 for cleaner UI
-        # snapped = 5 * round(avg / 5)
+        # 2. Add to buffer
+        self.accuracy_buffer.append(jittered_score)
         
-        return int(avg)
+        # 3. Calculate moving average
+        avg_score = sum(self.accuracy_buffer) / len(self.accuracy_buffer)
+        
+        return int(avg_score)
 
     @abstractmethod
     def analyze_form(self, landmarks, model):

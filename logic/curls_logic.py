@@ -38,6 +38,8 @@ class CurlsCorrector(BaseCorrector):
         elbow_angle_avg = (left_elbow_angle + right_elbow_angle) / 2
         
         form_feedback = "Good Form"
+        accuracy = 0
+        penalty = 0
         
 
         # --- Rep Counting Logic ---
@@ -76,39 +78,12 @@ class CurlsCorrector(BaseCorrector):
             
             if left_flare_distance > FLARE_TOLERANCE or right_flare_distance > FLARE_TOLERANCE:
                 form_feedback = "Keep Elbows In"
-                # accuracy -= 40 # Apply a penalty
+                penalty += 40 # Apply a penalty
             if left_wrist_flare_distance > FLARE_TOLERANCE or right_wrist_flare_distance > FLARE_TOLERANCE:
                 form_feedback = "Keep Arms Close"
-
-            # --- Rule 2: Check for Shoulder Swing (can override flare if it's also true) ---
-            # if self.baseline_l_shoulder_angle is not None:
-            #     left_swing = abs(left_shoulder_swing_angle - self.baseline_l_shoulder_angle)
-            #     right_swing = abs(right_shoulder_swing_angle - self.baseline_r_shoulder_angle)
-                
-            #     if left_swing > 12 or right_swing > 12: 
-            #         form_feedback = "Stop Swinging Shoulders" # This feedback is often more critical
-            #         accuracy -= 50 # Apply a heavy penalty
+                penalty += 20
         
         # Ensure accuracy doesn't go negative
-        # accuracy = max(0, accuracy)
-        accuracy = 0
-        if model:
-            try:
-                # Create the feature row using the calculated angles
-                row = [left_elbow_angle, right_elbow_angle, left_shoulder_swing_angle, right_shoulder_swing_angle]
-                X = pd.DataFrame([row], columns=self.column_names)
-                
-                prediction_proba = model.predict_proba(X)[0]
-                class_names = [name.lower().replace('_', '') for name in list(model.classes_)]
-                if 'goodform' in class_names:
-                    good_form_index = class_names.index('goodform')
-                    accuracy = int(prediction_proba[good_form_index] * 100)
-                else:
-                    accuracy = int(max(prediction_proba) * 100)
-                final_accuracy = self.smooth_accuracy(accuracy)
-            except Exception as e:
-                print(f"Curls model error: {e}")
-                accuracy = 0
-
-        # Ignore the ML model (model argument is not used)
-        return self.counter, form_feedback, final_accuracy
+        target_accuracy = max(0, 100 - penalty)
+        accuracy = self.smooth_accuracy(target_accuracy)
+        return self.counter, form_feedback, accuracy
