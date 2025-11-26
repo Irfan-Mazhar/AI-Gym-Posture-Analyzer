@@ -43,11 +43,11 @@ function WorkoutHistory({ profileData }) {
                 className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
               >
                 <div className="flex flex-col">
-                  <p className="font-bold text-xl text-gray-800">
+                  <p className="font-bold text-left text-xl text-gray-800">
                     {/* Session {profileData.sessions.length - idx} */}
                     {session.session_name || profileData.sessions.length - idx}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-left text-gray-500">
                     {formatDate(session.start_time)}
                   </p>
                 </div>

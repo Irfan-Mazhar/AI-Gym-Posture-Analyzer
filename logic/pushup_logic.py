@@ -54,7 +54,6 @@ class PushupCorrector(BaseCorrector):
                 row = [left_elbow_angle, right_elbow_angle, left_hip_angle, right_hip_angle]
                 X = pd.DataFrame([row], columns=self.column_names)
                 
-                prediction_class = model.predict(X)[0]
                 prediction_proba = model.predict_proba(X)[0]
                 
                 # Use model's feedback as the default

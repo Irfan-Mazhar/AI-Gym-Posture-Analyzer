@@ -53,8 +53,6 @@ EXERCISE_MAP = {
 }
 
 # --- User Authentication Routes ---
-# @app.route('/userDetails',methods=['GET'])
-# def getUserDetails():
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -228,26 +226,6 @@ def save_session(current_user):
     except Exception as e:
         print(f"Error saving session for user {current_user['username']}: {e}")
         return jsonify({'message': 'Error saving workout session'}), 500
-
-# --- Exercise Analysis Routes ---
-
-# @app.route('/start_exercise/<exercise_name>', methods=['POST'])
-# def start_exercise(exercise_name):
-#     global active_exercise, corrector, latest_data
-#     active_exercise = exercise_name.lower()
-#     if active_exercise in EXERCISE_MAP:
-#         try:
-#             latest_data = {"reps": 0, "form": "N/A", "accuracy": 0}
-#             module_name, class_name = EXERCISE_MAP[active_exercise]
-#             ExerciseModule = importlib.import_module(module_name)
-#             CorrectorClass = getattr(ExerciseModule, class_name)
-#             corrector = CorrectorClass()
-#             print(f"Successfully started exercise: {active_exercise}")
-#             return jsonify({"status": f"{active_exercise} session started"}), 200
-#         except Exception as e:
-#             print(f"Error starting exercise '{active_exercise}': {e}")
-#             return jsonify({"status": "Error initializing exercise"}), 500
-#     return jsonify({"status": f"Exercise '{active_exercise}' not found"}), 404
 
 ALL_LANDMARKS_INDICES = list(range(33))
 classifier_column_names = []
