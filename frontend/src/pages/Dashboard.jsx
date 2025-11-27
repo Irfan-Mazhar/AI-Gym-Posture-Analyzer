@@ -10,6 +10,7 @@ import ProgressTrends from "./ProgressTrends";
 import { useLanguage } from "../context/LanguageContext";
 import BMIMeter from "../components/BMIMeter";
 import Setting from "./Setting";
+import Analyze from "./Analyze";
 
 function Dashboard() {
   const { token, logout } = useAuth();
@@ -87,7 +88,7 @@ function Dashboard() {
       className={`p-3 m-2 rounded-lg cursor-pointer transition-all duration-200 ${
         activeView === viewName
           ? "bg-yellow-100 text-yellow-900 font-bold" // Active state
-          : "bg-none text-gray-700 hover:bg-gray-200" // Inactive state
+          : viewName==="analyze"?"p-3 bg-white/80 border m-2  rounded text-yellow-900 font-bold hover:bg-yellow-200 transition-all duration-200 ":"bg-none text-gray-700 hover:bg-gray-200" // Inactive state
       }`}
     >
       {isSidebarOpen? <h2 className="flex items-center justify-center gap-1">{title}<span>{icon}</span></h2>:<h2 className="flex justify-center items-center">{icon}</h2>}
@@ -104,7 +105,7 @@ function Dashboard() {
 
   return (
     <div className="w-full min-h-screen bg-gray-50 font-sans">
-      <Navbar />
+      <Navbar profileData={profileData.username}/>
 
       {/* Main layout container */}
       <div className="flex" style={{ paddingTop: "5rem" }}>
@@ -127,16 +128,10 @@ function Dashboard() {
               </span>
             </div>
             <div>
-              {/* Use Link component for proper navigation */}
-              <Link
-                to="/analyze"
-                className="block p-3 bg-white border m-2  rounded text-yellow-900 font-bold hover:bg-yellow-200 transition-all duration-200"
-              >
-                {isSidebarOpen?<h2 className=" flex items-center justify-center gap-1">{t('sidebar1')} <span><Play /></span></h2>:<h2 className="flex items-center justify-center"><Play /></h2>}
-              </Link>
               {/* Add more items here */}
             <div>
               {/* Use the helper component for state-based view switching */}
+              <SidebarItem title={t('sidebar1')} viewName="analyze" icon={<Play />}/>
               <SidebarItem title={t('sidebar2')} viewName="overview" icon={<PanelsTopLeft />}/>
               <SidebarItem title={t('sidebar3')} viewName="history" icon={<Calendar />}/>
               <SidebarItem title={t('sidebar4')} viewName="settings" icon={<Settings />}/>
@@ -156,6 +151,9 @@ function Dashboard() {
         {/* This div will contain the content, offset by the sidebar's width */}
         <main className={`${isSidebarOpen? "md:ml-60 ml-20":"ml-20"} w-full p-8`}>
           {/* Conditionally render the "Overview" content */}
+          {activeView === "analyze" && (
+            <Analyze />
+          )}
           {activeView === "overview" && (
             <div className="flex flex-col items-center gap-10 animate-fade-in">
               <h1 className="text-[#cfb498] font-bold text-5xl">

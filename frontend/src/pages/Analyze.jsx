@@ -176,7 +176,7 @@ function Analyze() {
 
     console.log("Session Summary to send:", sessionSummary);
 
-    if (sessionSummary.exercises.length > 0) {
+    if (sessionSummary.exercises.length > 0 && isLoggedIn)  {
       setSessionToSave(sessionSummary); // Store the data
       setSaveSessionModal(true); // Show the modal
     } else {
@@ -243,7 +243,8 @@ function Analyze() {
   return (
     // Use a softer background color and default to a modern sans-serif font
     <div className="bg-gray-50 min-h-screen w-full font-sans text-gray-900">
-      <Navbar />
+      {!isLoggedIn && <Navbar />}
+      
       {saveSessionModal && (
         // Modal Overlay: dark background, fills screen
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm  ">
@@ -303,8 +304,8 @@ function Analyze() {
               {t('signup')}
             </button>}
             <div>
-              <h3 className="text-xl font-medium max-w-xl">Are you a beginner? Not sure what to do? Try our AI-Fitness Coach and get personalised workout recommendations.</h3>
-              <button className="hover:scale-[1.03] rounded-lg transition-all duration-200 shadow-lg text-white hover:shadow-xl px-8 py-3 m-2 text-lg font-bold bg-blue-300 hover:cursor-pointer"><a target="_blank" href="https://ai-fitness-coach-opal.vercel.app/">AI Fitness Coach</a></button>
+              <h3 className="text-xl font-medium max-w-xl">{t('fitness_coach')}</h3>
+              <button className="hover:scale-[1.03] rounded-lg transition-all duration-200 shadow-lg text-white hover:shadow-xl px-8 py-3 m-2 text-lg font-bold bg-blue-300 hover:cursor-pointer"><a target="_blank" href="https://ai-fitness-coach-opal.vercel.app/">{t('fitness_btn')}</a></button>
             </div>
           </div>
         ) : (

@@ -48,25 +48,25 @@ function LoginPage({isLogin}) {
                 <form onSubmit={handleAuth} className="space-y-6">
                     <div>
                         <label className="block text-sm text-black text-left font-medium">{t('login_subtitle1')}</label>
-                        <input type="text" value={username?.undefined} onChange={(e) => setUsername(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
+                        <input type="text" value={username?.undefined} onChange={(e) => setUsername(e.target.value)} required minLength="3" className="w-full px-3 py-2 mt-1 text-black bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                     </div>
                     <div>
                         <label className="block text-sm text-black text-left font-medium">{t('login_subtitle2')}</label>
-                        <input type="password" value={password?.undefined} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
+                        <input type="password" value={password?.undefined} onChange={(e) => setPassword(e.target.value)}pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,}"  required  className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" title="Must contain at least one number and one uppercase and lowercase letter, and at least 5 or more characters"/>
                     </div>
                     {!isLoginView? 
                     <>
                         <div>
                             <label className="block text-sm text-black text-left font-medium">{t('login_age')}</label>
-                            <input type="number" value={age?.undefined} onChange={(e) => setAge(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
+                            <input type="number" value={age?.undefined} onChange={(e) => setAge(e.target.value)} required min="15" className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                         </div>
                         <div>
                             <label className="block text-sm text-black text-left font-medium">{t('login_height')}</label>
-                            <input type="number" value={height?.undefined} onChange={(e) => setHeight(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
+                            <input type="number" value={height?.undefined} onChange={(e) => setHeight(e.target.value)} required min="1" className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                         </div>
                         <div>
                             <label className="block text-sm text-black text-left font-medium">{t('login_weight')}</label>
-                            <input type="number" value={weight?.undefined} onChange={(e) => setWeight(e.target.value)} required className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
+                            <input type="number" value={weight?.undefined} onChange={(e) => setWeight(e.target.value)} required min="1" className="w-full px-3 py-2 mt-1 text-black  bg-white border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black" />
                         </div>
                     </>
                         : null}
